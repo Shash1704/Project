@@ -20,22 +20,56 @@ type Filter = 'all' | 'unread' | 'groups' | 'ai';
 function preview(c: ConversationDto, meId: string | undefined): string {
   const m = c.lastMessage;
   if (!m) return c.kind === 'group' ? 'Say hello to the group 👋' : 'Start the conversation';
-  const who = m.senderId === meId ? 'You' : c.kind === 'group' ? (c.members.find((x) => x.userId === m.senderId)?.name.split(' ')[0] ?? '') : '';
-  const body =
-    m.deletedAt ? 'Message deleted' : m.kind === 'image' ? '📷 Photo' : m.kind === 'voice' ? '🎤 Voice note' : m.kind === 'file' ? `📄 ${m.media?.name ?? 'Document'}` : (m.body ?? '');
+  const who =
+    m.senderId === meId
+      ? 'You'
+      : c.kind === 'group'
+        ? (c.members.find((x) => x.userId === m.senderId)?.name.split(' ')[0] ?? '')
+        : '';
+  const body = m.deletedAt
+    ? 'Message deleted'
+    : m.kind === 'image'
+      ? '📷 Photo'
+      : m.kind === 'voice'
+        ? '🎤 Voice note'
+        : m.kind === 'file'
+          ? `📄 ${m.media?.name ?? 'Document'}`
+          : (m.body ?? '');
   return who ? `${who}: ${body}` : body;
 }
 
 /** Map a conversation onto a bento card variant. */
-export function toCard(c: ConversationDto, meId: string | undefined, onOpen: () => void): ChatCardProps {
-  const base = { id: c.id, name: c.title, color: cardColorFor(c.id), unread: c.unread, muted: c.muted, onOpen, layoutId: `card-${c.id}` };
+export function toCard(
+  c: ConversationDto,
+  meId: string | undefined,
+  onOpen: () => void,
+): ChatCardProps {
+  const base = {
+    id: c.id,
+    name: c.title,
+    color: cardColorFor(c.id),
+    unread: c.unread,
+    muted: c.muted,
+    onOpen,
+    layoutId: `card-${c.id}`,
+  };
   const m = c.lastMessage;
-  if (c.pinned && c.kind === 'direct') return { ...base, variant: 'pinned', avatarSeed: c.avatarSeed, avatarSrc: c.avatarUrl };
+  if (c.pinned && c.kind === 'direct')
+    return { ...base, variant: 'pinned', avatarSeed: c.avatarSeed, avatarSrc: c.avatarUrl };
   if (m?.kind === 'image' && m.media && !m.deletedAt)
-    return { ...base, variant: 'media', imageUrl: m.media.url, imageAlt: `Latest photo in ${c.title}` };
+    return {
+      ...base,
+      variant: 'media',
+      imageUrl: m.media.url,
+      imageAlt: `Latest photo in ${c.title}`,
+    };
   if (m?.kind === 'voice' && !m.deletedAt) {
     const secs = Math.round((m.media?.durationMs ?? 0) / 1000);
-    return { ...base, variant: 'voice', caption: `Voice note · ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}` };
+    return {
+      ...base,
+      variant: 'voice',
+      caption: `Voice note · ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`,
+    };
   }
   return { ...base, variant: 'text', preview: preview(c, meId), time: formatWhen(c.lastMessageAt) };
 }
@@ -55,16 +89,27 @@ export function ChatList({ className }: { className?: string }) {
     () =>
       Object.values(conversations).sort(
         (a, b) =>
-          Number(b.pinned) - Number(a.pinned) || (b.lastMessageAt ?? '').localeCompare(a.lastMessageAt ?? '') || b.id.localeCompare(a.id),
+          Number(b.pinned) - Number(a.pinned) ||
+          (b.lastMessageAt ?? '').localeCompare(a.lastMessageAt ?? '') ||
+          b.id.localeCompare(a.id),
       ),
     [conversations],
   );
   const shown = all.filter((c) =>
-    filter === 'unread' ? c.unread > 0 : filter === 'groups' ? c.kind === 'group' : filter === 'ai' ? c.aiEnabled : true,
+    filter === 'unread'
+      ? c.unread > 0
+      : filter === 'groups'
+        ? c.kind === 'group'
+        : filter === 'ai'
+          ? c.aiEnabled
+          : true,
   );
 
   return (
-    <section aria-label="Chats" className={cn('relative min-h-dvh bg-ink px-screen pt-8 pb-28 text-white', className)}>
+    <section
+      aria-label="Chats"
+      className={cn('relative min-h-dvh bg-ink px-screen pt-8 pb-28 text-white', className)}
+    >
       <div className="flex items-start justify-between">
         <h1 className="text-display md:text-display-desktop">
           My
@@ -72,7 +117,12 @@ export function ChatList({ className }: { className?: string }) {
           Chats
         </h1>
         <div className="relative">
-          <IconButton label="Account menu" tone="hub" aria-expanded={accountMenu} onClick={() => setAccountMenu((v) => !v)}>
+          <IconButton
+            label="Account menu"
+            tone="hub"
+            aria-expanded={accountMenu}
+            onClick={() => setAccountMenu((v) => !v)}
+          >
             <Menu />
           </IconButton>
           <AnimatePresence>
@@ -108,7 +158,11 @@ export function ChatList({ className }: { className?: string }) {
         </div>
       </div>
 
-      <div className="-mx-screen mt-6 flex gap-2 overflow-x-auto px-screen pb-1 [scrollbar-width:none]" role="toolbar" aria-label="Filter chats">
+      <div
+        className="-mx-screen mt-6 flex gap-2 overflow-x-auto px-screen pb-1 [scrollbar-width:none]"
+        role="toolbar"
+        aria-label="Filter chats"
+      >
         <FilterPill active={filter === 'all'} count={all.length} onClick={() => setFilter('all')}>
           All
         </FilterPill>
@@ -130,7 +184,10 @@ export function ChatList({ className }: { className?: string }) {
       ) : (
         <motion.div layout className="mt-5 grid grid-cols-2 gap-gap [grid-auto-flow:dense]">
           {shown.map((c) => (
-            <div key={c.id} className={cn('contents', active === c.id && '[&>*]:ring-4 [&>*]:ring-white')}>
+            <div
+              key={c.id}
+              className={cn('contents', active === c.id && '[&>*]:ring-4 [&>*]:ring-white')}
+            >
               <ChatCard {...toCard(c, me?.id, () => router.push(`/c/${c.id}`))} />
             </div>
           ))}
@@ -147,16 +204,32 @@ export function ChatList({ className }: { className?: string }) {
                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                 className="absolute right-0 bottom-20 flex w-52 flex-col gap-2"
               >
-                <MenuPill icon={<MessageCirclePlus />} onClick={() => { setMenu(false); setSheet('direct'); }}>
+                <MenuPill
+                  icon={<MessageCirclePlus />}
+                  onClick={() => {
+                    setMenu(false);
+                    setSheet('direct');
+                  }}
+                >
                   New chat
                 </MenuPill>
-                <MenuPill icon={<Users />} onClick={() => { setMenu(false); setSheet('group'); }}>
+                <MenuPill
+                  icon={<Users />}
+                  onClick={() => {
+                    setMenu(false);
+                    setSheet('group');
+                  }}
+                >
                   New group
                 </MenuPill>
               </motion.div>
             )}
           </AnimatePresence>
-          <Fab open={menu} onClick={() => setMenu((v) => !v)} label={menu ? 'Close menu' : 'New chat'} />
+          <Fab
+            open={menu}
+            onClick={() => setMenu((v) => !v)}
+            label={menu ? 'Close menu' : 'New chat'}
+          />
         </div>
       </div>
 
@@ -165,7 +238,15 @@ export function ChatList({ className }: { className?: string }) {
   );
 }
 
-function MenuPill({ icon, children, onClick }: { icon: React.ReactNode; children: React.ReactNode; onClick: () => void }) {
+function MenuPill({
+  icon,
+  children,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
   return (
     <button
       type="button"
@@ -190,7 +271,11 @@ function EmptyState({ filter, onNew }: { filter: Filter; onNew: () => void }) {
       <p className="text-title">{copy[0]}</p>
       <p className="mt-2 text-body text-white/70">{copy[1]}</p>
       {filter === 'all' && (
-        <button type="button" onClick={onNew} className="mt-5 min-h-11 rounded-pill bg-cream px-5 text-card-title text-ink">
+        <button
+          type="button"
+          onClick={onNew}
+          className="mt-5 min-h-11 rounded-pill bg-cream px-5 text-card-title text-ink"
+        >
           Start a chat
         </button>
       )}

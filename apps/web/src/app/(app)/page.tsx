@@ -14,7 +14,9 @@ export default function Home() {
         <br />
         to dive in
       </h2>
-      <p className="mt-3 max-w-sm text-body text-muted">Everything you send rides Kafka on Aiven and lands on every device in real time.</p>
+      <p className="mt-3 max-w-sm text-body text-muted">
+        Everything you send rides Kafka on Aiven and lands on every device in real time.
+      </p>
     </div>
   );
 }

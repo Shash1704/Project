@@ -8,6 +8,9 @@ const { startFanout } = await import('./consumers/fanout');
 const { startDbWriter } = await import('./consumers/db-writer');
 const { startReceipts } = await import('./consumers/receipts');
 const { startPresence } = await import('./consumers/presence');
+const { startHealthServer } = await import('./health');
+
+startHealthServer();
 
 try {
   await Promise.all([startFanout(), startDbWriter(), startReceipts(), startPresence()]);

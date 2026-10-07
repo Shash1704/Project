@@ -27,8 +27,20 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
   return (
     <SessionGate fallback={<Splash />}>
       <div className="bg-ink md:grid md:h-dvh md:grid-cols-[var(--pulse-size-desktop-list-width)_1fr] md:overflow-hidden">
-        <ChatList className={cn('md:h-dvh md:min-h-0 md:overflow-y-auto', inConversation && 'hidden md:block')} />
-        <main className={cn('min-w-0 md:overflow-hidden md:rounded-l-sheet', !inConversation && 'hidden md:block')}>{children}</main>
+        <ChatList
+          className={cn(
+            'md:h-dvh md:min-h-0 md:overflow-y-auto',
+            inConversation && 'hidden md:block',
+          )}
+        />
+        <main
+          className={cn(
+            'min-w-0 md:overflow-hidden md:rounded-l-sheet',
+            !inConversation && 'hidden md:block',
+          )}
+        >
+          {children}
+        </main>
       </div>
     </SessionGate>
   );

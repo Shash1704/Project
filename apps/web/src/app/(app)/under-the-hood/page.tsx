@@ -35,7 +35,14 @@ interface Stats {
 
 const fmt = new Intl.NumberFormat();
 
-function Card({ color, title, ms, ok, children, className }: {
+function Card({
+  color,
+  title,
+  ms,
+  ok,
+  children,
+  className,
+}: {
   color: keyof typeof cardBg;
   title: string;
   ms?: number;
@@ -102,22 +109,39 @@ export default function UnderTheHood() {
         <IconButton label="Back to chats" tone="hub" onClick={() => router.push('/')}>
           <ChevronLeft className="!size-6" />
         </IconButton>
-        <span className="text-caption text-white/60">{error ? 'Reconnecting…' : s ? `Live · ${new Date(s.at).toLocaleTimeString()}` : 'Loading…'}</span>
+        <span className="text-caption text-white/60">
+          {error
+            ? 'Reconnecting…'
+            : s
+              ? `Live · ${new Date(s.at).toLocaleTimeString()}`
+              : 'Loading…'}
+        </span>
       </div>
       <h1 className="mt-2 text-display md:text-display-desktop">
         Under
         <br />
         the hood
       </h1>
-      <p className="mt-2 max-w-md text-body text-white/70">Every number below is read live from Pulse’s Aiven services, refreshed every 3 seconds.</p>
+      <p className="mt-2 max-w-md text-body text-white/70">
+        Every number below is read live from Pulse’s Aiven services, refreshed every 3 seconds.
+      </p>
 
       <div className="mt-6 grid grid-cols-1 gap-gap sm:grid-cols-2">
-        <Card color="coral" title="Aiven for Apache Kafka" ms={s?.kafka.ms} ok={s?.kafka.ok} className="sm:col-span-2">
+        <Card
+          color="coral"
+          title="Aiven for Apache Kafka"
+          ms={s?.kafka.ms}
+          ok={s?.kafka.ok}
+          className="sm:col-span-2"
+        >
           {k ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <ul className="flex flex-col gap-1.5">
                 {k.topics.map((t) => (
-                  <li key={t.topic} className="flex items-baseline justify-between gap-2 rounded-pill bg-ink/10 px-3 py-1.5">
+                  <li
+                    key={t.topic}
+                    className="flex items-baseline justify-between gap-2 rounded-pill bg-ink/10 px-3 py-1.5"
+                  >
                     <span className="text-caption font-semibold">{t.topic}</span>
                     <span className="text-caption tabular-nums">
                       {fmt.format(t.messages)} msgs · {t.perSec.toFixed(1)}/s
@@ -127,7 +151,10 @@ export default function UnderTheHood() {
               </ul>
               <ul className="flex flex-col gap-1.5" aria-label="Consumer lag">
                 {k.lag.map((l) => (
-                  <li key={l.group} className="flex items-baseline justify-between gap-2 rounded-pill bg-ink/10 px-3 py-1.5">
+                  <li
+                    key={l.group}
+                    className="flex items-baseline justify-between gap-2 rounded-pill bg-ink/10 px-3 py-1.5"
+                  >
                     <span className="text-caption font-semibold">pulse-{l.group}</span>
                     <span className="text-caption tabular-nums">lag {fmt.format(l.lag)}</span>
                   </li>
@@ -142,7 +169,10 @@ export default function UnderTheHood() {
         <Card color="mustard" title="Aiven for Valkey" ms={s?.valkey.ms} ok={s?.valkey.ok}>
           {v ? (
             <div className="grid grid-cols-2 gap-3">
-              <Big value={total ? `${Math.round((hits / total) * 100)}%` : '—'} label="cache hit rate" />
+              <Big
+                value={total ? `${Math.round((hits / total) * 100)}%` : '—'}
+                label="cache hit rate"
+              />
               <Big value={fmt.format(v.keys)} label="keys (presence, unread, sessions…)" />
               <Big value={fmt.format(v.delivered)} label="messages fanned out" />
               <Big value={fmt.format(v.produced)} label="messages produced" />
@@ -175,24 +205,66 @@ export default function UnderTheHood() {
 
 /** Send-path diagram; colours come from the token CSS variables so it follows the theme. */
 function Architecture() {
-  const box = (x: number, y: number, w: number, label: string, sub: string, fill = 'var(--pulse-cream)') => (
+  const box = (
+    x: number,
+    y: number,
+    w: number,
+    label: string,
+    sub: string,
+    fill = 'var(--pulse-cream)',
+  ) => (
     <g>
       <rect x={x} y={y} width={w} height={52} rx={26} fill={fill} />
-      <text x={x + w / 2} y={y + 23} textAnchor="middle" fontSize="13" fontWeight="600" fill="var(--pulse-ink)">
+      <text
+        x={x + w / 2}
+        y={y + 23}
+        textAnchor="middle"
+        fontSize="13"
+        fontWeight="600"
+        fill="var(--pulse-ink)"
+      >
         {label}
       </text>
-      <text x={x + w / 2} y={y + 40} textAnchor="middle" fontSize="10" fill="var(--pulse-ink)" opacity="0.75">
+      <text
+        x={x + w / 2}
+        y={y + 40}
+        textAnchor="middle"
+        fontSize="10"
+        fill="var(--pulse-ink)"
+        opacity="0.75"
+      >
         {sub}
       </text>
     </g>
   );
   const arrow = (x1: number, y1: number, x2: number, y2: number) => (
-    <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--pulse-ink)" strokeWidth="2" markerEnd="url(#arrow)" />
+    <line
+      x1={x1}
+      y1={y1}
+      x2={x2}
+      y2={y2}
+      stroke="var(--pulse-ink)"
+      strokeWidth="2"
+      markerEnd="url(#arrow)"
+    />
   );
   return (
-    <svg viewBox="0 0 720 250" role="img" aria-label="Client sends over WebSocket to the API, which produces to Kafka; consumers fan out via Valkey, persist to MySQL" className="w-full">
+    <svg
+      viewBox="0 0 720 250"
+      role="img"
+      aria-label="Client sends over WebSocket to the API, which produces to Kafka; consumers fan out via Valkey, persist to MySQL"
+      className="w-full"
+    >
       <defs>
-        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <marker
+          id="arrow"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="7"
+          markerHeight="7"
+          orient="auto"
+        >
           <path d="M0,0 L10,5 L0,10 z" fill="var(--pulse-ink)" />
         </marker>
       </defs>

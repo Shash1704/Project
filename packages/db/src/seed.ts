@@ -16,13 +16,52 @@ import { migrateMysql } from './migrate';
 type P = { key: string; name: string; email: string; lang: string; about: string; demo?: boolean };
 
 const people: P[] = [
-  { key: 'asha', name: 'Asha (Judge)', email: 'judge.asha@pulse.demo', lang: 'en', about: 'Judging with coffee ☕', demo: true },
-  { key: 'rohan', name: 'Rohan (Judge)', email: 'judge.rohan@pulse.demo', lang: 'hi', about: 'Ship it 🚀', demo: true },
-  { key: 'kavya', name: 'Kavya (Judge)', email: 'judge.kavya@pulse.demo', lang: 'kn', about: 'ನಮಸ್ಕಾರ 👋', demo: true },
+  {
+    key: 'asha',
+    name: 'Asha (Judge)',
+    email: 'judge.asha@pulse.demo',
+    lang: 'en',
+    about: 'Judging with coffee ☕',
+    demo: true,
+  },
+  {
+    key: 'rohan',
+    name: 'Rohan (Judge)',
+    email: 'judge.rohan@pulse.demo',
+    lang: 'hi',
+    about: 'Ship it 🚀',
+    demo: true,
+  },
+  {
+    key: 'kavya',
+    name: 'Kavya (Judge)',
+    email: 'judge.kavya@pulse.demo',
+    lang: 'kn',
+    about: 'ನಮಸ್ಕಾರ 👋',
+    demo: true,
+  },
   { key: 'meera', name: 'Meera Iyer', email: 'meera@pulse.demo', lang: 'en', about: 'Design lead' },
-  { key: 'arjun', name: 'Arjun Rao', email: 'arjun@pulse.demo', lang: 'kn', about: 'Backend · Bengaluru' },
-  { key: 'zoya', name: 'Zoya Khan', email: 'zoya@pulse.demo', lang: 'hi', about: 'PM who writes code' },
-  { key: 'dev', name: 'Dev Malhotra', email: 'dev@pulse.demo', lang: 'hi', about: 'Frontend & memes' },
+  {
+    key: 'arjun',
+    name: 'Arjun Rao',
+    email: 'arjun@pulse.demo',
+    lang: 'kn',
+    about: 'Backend · Bengaluru',
+  },
+  {
+    key: 'zoya',
+    name: 'Zoya Khan',
+    email: 'zoya@pulse.demo',
+    lang: 'hi',
+    about: 'PM who writes code',
+  },
+  {
+    key: 'dev',
+    name: 'Dev Malhotra',
+    email: 'dev@pulse.demo',
+    lang: 'hi',
+    about: 'Frontend & memes',
+  },
   { key: 'nila', name: 'Nila Selvam', email: 'nila@pulse.demo', lang: 'ta', about: 'ML · Chennai' },
   { key: 'sam', name: 'Sam Thomas', email: 'sam@pulse.demo', lang: 'en', about: 'Ops' },
 ];
@@ -50,7 +89,10 @@ const hackathonCore: Line[] = [
   ['zoya', 'Deadline reminder: submission closes Friday 6 PM, not midnight ⏰'],
   ['dev', 'Wait really? I thought midnight'],
   ['zoya', 'Checked the rules page — 6 PM IST. Pinning this'],
-  ['arjun', 'Kafka topics: messages.sent, receipts, presence, ai.jobs, analytics. Free tier allows 5'],
+  [
+    'arjun',
+    'Kafka topics: messages.sent, receipts, presence, ai.jobs, analytics. Free tier allows 5',
+  ],
   ['meera', 'Perfect. Arjun owns the pipeline'],
   ['arjun', 'ಸರಿ, I’ll have the consumer groups up by tomorrow'],
   ['nila', 'Joining late — I can do the embeddings + pgvector search'],
@@ -97,21 +139,56 @@ const hackathonCore: Line[] = [
 ];
 
 const chatter = [
-  'haha', '😂', 'true', 'ok', '👍', 'nice', 'on it', 'agreed', 'one sec', 'brb', 'done', 'lol yes', 'ठीक है', 'हाँ', 'सही', 'ಸರಿ',
-  'ಹೌದು', 'cool', '🔥🔥', 'makes sense', 'can we sync later?', 'sending in 5', 'pushed', 'pulling now', 'looks good', 'nice catch',
-  'coffee break ☕', 'back', 'kal milte hain', 'thoda late hoga', 'which branch?', 'main', 'merged', 'CI is green ✅', 'tests pass',
+  'haha',
+  '😂',
+  'true',
+  'ok',
+  '👍',
+  'nice',
+  'on it',
+  'agreed',
+  'one sec',
+  'brb',
+  'done',
+  'lol yes',
+  'ठीक है',
+  'हाँ',
+  'सही',
+  'ಸರಿ',
+  'ಹೌದು',
+  'cool',
+  '🔥🔥',
+  'makes sense',
+  'can we sync later?',
+  'sending in 5',
+  'pushed',
+  'pulling now',
+  'looks good',
+  'nice catch',
+  'coffee break ☕',
+  'back',
+  'kal milte hain',
+  'thoda late hoga',
+  'which branch?',
+  'main',
+  'merged',
+  'CI is green ✅',
+  'tests pass',
 ];
 
 function expand(core: Line[], filler: number, crowd: string[]): Line[] {
   const out: Line[] = [];
   let seed = 7;
-  const rand = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+  const rand = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
   const per = Math.ceil(filler / core.length);
   for (const line of core) {
     out.push(line);
     const n = Math.floor(rand() * (per + 1));
     for (let i = 0; i < n && out.length < core.length + filler; i++) {
-      out.push([crowd[Math.floor(rand() * crowd.length)]!, chatter[Math.floor(rand() * chatter.length)]!]);
+      out.push([
+        crowd[Math.floor(rand() * crowd.length)]!,
+        chatter[Math.floor(rand() * chatter.length)]!,
+      ]);
     }
   }
   return out;
@@ -191,14 +268,39 @@ const directs: { a: string; b: string; lines: Line[]; pinFor?: string }[] = [
       ['meera', 'Try “Catch me up” in Hackathon Crew — 150+ messages'],
     ],
   },
-  { a: 'rohan', b: 'zoya', pinFor: 'rohan', lines: [['zoya', 'Rohan, demo 4 baje hai'], ['rohan', 'Done, main aa jaunga']] },
-  { a: 'kavya', b: 'arjun', pinFor: 'kavya', lines: [['arjun', 'ನಾಳೆ ಸಿಗೋಣ?'], ['kavya', 'ಸರಿ, 10 ಗಂಟೆಗೆ']] },
-  { a: 'asha', b: 'rohan', lines: [['rohan', 'Asha, scorecard ready?'], ['asha', 'Almost, sending by 5']] },
+  {
+    a: 'rohan',
+    b: 'zoya',
+    pinFor: 'rohan',
+    lines: [
+      ['zoya', 'Rohan, demo 4 baje hai'],
+      ['rohan', 'Done, main aa jaunga'],
+    ],
+  },
+  {
+    a: 'kavya',
+    b: 'arjun',
+    pinFor: 'kavya',
+    lines: [
+      ['arjun', 'ನಾಳೆ ಸಿಗೋಣ?'],
+      ['kavya', 'ಸರಿ, 10 ಗಂಟೆಗೆ'],
+    ],
+  },
+  {
+    a: 'asha',
+    b: 'rohan',
+    lines: [
+      ['rohan', 'Asha, scorecard ready?'],
+      ['asha', 'Almost, sending by 5'],
+    ],
+  },
 ];
 
 async function reset() {
   const pool = db();
-  const [users] = await pool.query<RowDataPacket[]>(`SELECT id FROM users WHERE email LIKE '%@pulse.demo'`);
+  const [users] = await pool.query<RowDataPacket[]>(
+    `SELECT id FROM users WHERE email LIKE '%@pulse.demo'`,
+  );
   const ids = users.map((u) => u.id as string);
   if (!ids.length) return;
   const [convs] = await pool.query<RowDataPacket[]>(
@@ -207,8 +309,14 @@ async function reset() {
   );
   const convIds = convs.map((c) => c.id as string);
   if (convIds.length) {
-    await pool.query('DELETE FROM message_receipts WHERE message_id IN (SELECT id FROM messages WHERE conversation_id IN (?))', [convIds]);
-    await pool.query('DELETE FROM reactions WHERE message_id IN (SELECT id FROM messages WHERE conversation_id IN (?))', [convIds]);
+    await pool.query(
+      'DELETE FROM message_receipts WHERE message_id IN (SELECT id FROM messages WHERE conversation_id IN (?))',
+      [convIds],
+    );
+    await pool.query(
+      'DELETE FROM reactions WHERE message_id IN (SELECT id FROM messages WHERE conversation_id IN (?))',
+      [convIds],
+    );
     await pool.query('DELETE FROM moments WHERE conversation_id IN (?)', [convIds]);
     await pool.query('DELETE FROM messages WHERE conversation_id IN (?)', [convIds]);
     await pool.query('DELETE FROM conversation_members WHERE conversation_id IN (?)', [convIds]);
@@ -218,10 +326,15 @@ async function reset() {
   await pool.query('DELETE FROM users WHERE id IN (?)', [ids]);
 }
 
-export async function seed({ resetFirst = false } = {}): Promise<{ users: number; messages: number }> {
+export async function seed({ resetFirst = false } = {}): Promise<{
+  users: number;
+  messages: number;
+}> {
   const pool = db();
   if (resetFirst) await reset();
-  const [existing] = await pool.query<RowDataPacket[]>(`SELECT id FROM users WHERE email = 'judge.asha@pulse.demo'`);
+  const [existing] = await pool.query<RowDataPacket[]>(
+    `SELECT id FROM users WHERE email = 'judge.asha@pulse.demo'`,
+  );
   if (existing.length) {
     console.log('Already seeded (run with --reset to recreate).');
     return { users: 0, messages: 0 };
@@ -230,15 +343,10 @@ export async function seed({ resetFirst = false } = {}): Promise<{ users: number
   const uid: Record<string, string> = {};
   for (const p of people) {
     uid[p.key] = newId();
-    await pool.query('INSERT INTO users (id, email, name, avatar_seed, about, lang, is_demo) VALUES (?, ?, ?, ?, ?, ?, ?)', [
-      uid[p.key],
-      p.email,
-      p.name,
-      p.key,
-      p.about,
-      p.lang,
-      p.demo ? 1 : 0,
-    ]);
+    await pool.query(
+      'INSERT INTO users (id, email, name, avatar_seed, about, lang, is_demo) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [uid[p.key], p.email, p.name, p.key, p.about, p.lang, p.demo ? 1 : 0],
+    );
   }
 
   let messageCount = 0;
@@ -266,11 +374,15 @@ export async function seed({ resetFirst = false } = {}): Promise<{ users: number
       lastAt = new Date(at);
     }
     for (let i = 0; i < rows.length; i += 200) {
-      await pool.query('INSERT INTO messages (id, conversation_id, sender_id, kind, body, media_id, created_at) VALUES ?', [
-        rows.slice(i, i + 200),
-      ]);
+      await pool.query(
+        'INSERT INTO messages (id, conversation_id, sender_id, kind, body, media_id, created_at) VALUES ?',
+        [rows.slice(i, i + 200)],
+      );
     }
-    await pool.query('UPDATE conversations SET last_message_id = ?, last_message_at = ? WHERE id = ?', [lastId, lastAt, convId]);
+    await pool.query(
+      'UPDATE conversations SET last_message_id = ?, last_message_at = ? WHERE id = ?',
+      [lastId, lastAt, convId],
+    );
     // Everyone has received the history; judges have read none of it, so unread badges are real.
     const judges = new Set(people.filter((p) => p.demo).map((p) => uid[p.key]));
     await pool.query(
@@ -283,21 +395,31 @@ export async function seed({ resetFirst = false } = {}): Promise<{ users: number
   for (const g of groups) {
     const id = newId(Date.now() - g.days * 86_400_000 - 3_600_000);
     const creator = uid[g.members[0]!]!;
-    await pool.query(`INSERT INTO conversations (id, kind, title, created_by) VALUES (?, 'group', ?, ?)`, [id, g.title, creator]);
-    await pool.query('INSERT INTO conversation_members (conversation_id, user_id, role, ai_enabled) VALUES ?', [
-      g.members.map((m, i) => [id, uid[m], i === 0 ? 'admin' : 'member', g.ai ? 1 : 0]),
-    ]);
+    await pool.query(
+      `INSERT INTO conversations (id, kind, title, created_by) VALUES (?, 'group', ?, ?)`,
+      [id, g.title, creator],
+    );
+    await pool.query(
+      'INSERT INTO conversation_members (conversation_id, user_id, role, ai_enabled) VALUES ?',
+      [g.members.map((m, i) => [id, uid[m], i === 0 ? 'admin' : 'member', g.ai ? 1 : 0])],
+    );
     await writeHistory(id, g.lines, g.days);
   }
 
   for (const d of directs) {
     const id = newId(Date.now() - 86_400_000);
     const key = [uid[d.a]!, uid[d.b]!].sort().join(':');
-    await pool.query(`INSERT INTO conversations (id, kind, direct_key, created_by) VALUES (?, 'direct', ?, ?)`, [id, key, uid[d.a]]);
-    await pool.query('INSERT INTO conversation_members (conversation_id, user_id, role, pinned) VALUES ?, ?', [
-      [id, uid[d.a], 'admin', d.pinFor === d.a ? 1 : 0],
-      [id, uid[d.b], 'admin', d.pinFor === d.b ? 1 : 0],
-    ]);
+    await pool.query(
+      `INSERT INTO conversations (id, kind, direct_key, created_by) VALUES (?, 'direct', ?, ?)`,
+      [id, key, uid[d.a]],
+    );
+    await pool.query(
+      'INSERT INTO conversation_members (conversation_id, user_id, role, pinned) VALUES ?, ?',
+      [
+        [id, uid[d.a], 'admin', d.pinFor === d.a ? 1 : 0],
+        [id, uid[d.b], 'admin', d.pinFor === d.b ? 1 : 0],
+      ],
+    );
     await writeHistory(id, d.lines, 1);
   }
 

@@ -9,7 +9,13 @@ import { api, ApiError } from '@/lib/api';
 import { upsertConversation } from '@/lib/store';
 import { cn } from '@/lib/utils';
 
-export function NewChatSheet({ mode, onClose }: { mode: null | 'direct' | 'group'; onClose: () => void }) {
+export function NewChatSheet({
+  mode,
+  onClose,
+}: {
+  mode: null | 'direct' | 'group';
+  onClose: () => void;
+}) {
   return (
     <Sheet open={!!mode} onClose={onClose} title={mode === 'group' ? 'New group' : 'New chat'}>
       {mode && <NewChatBody key={mode} mode={mode} onClose={onClose} />}
@@ -44,7 +50,12 @@ function NewChatBody({ mode, onClose }: { mode: 'direct' | 'group'; onClose: () 
   const startDirect = async (u: UserDto) => {
     setBusy(true);
     try {
-      open(await api<ConversationDto>('/conversations/direct', { method: 'POST', json: { userId: u.id } }));
+      open(
+        await api<ConversationDto>('/conversations/direct', {
+          method: 'POST',
+          json: { userId: u.id },
+        }),
+      );
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Could not start the chat');
     } finally {
@@ -104,8 +115,12 @@ function NewChatBody({ mode, onClose }: { mode: 'direct' | 'group'; onClose: () 
 
       <ul className="mt-4 flex flex-col gap-2">
         {results === null &&
-          Array.from({ length: 4 }, (_, i) => <li key={i} className="h-14 animate-pulse rounded-pill bg-cream-deep" aria-hidden />)}
-        {results?.length === 0 && <li className="px-2 text-body text-muted">No one matches “{q}”.</li>}
+          Array.from({ length: 4 }, (_, i) => (
+            <li key={i} className="h-14 animate-pulse rounded-pill bg-cream-deep" aria-hidden />
+          ))}
+        {results?.length === 0 && (
+          <li className="px-2 text-body text-muted">No one matches “{q}”.</li>
+        )}
         {results?.map((u) => {
           const selected = picked.some((p) => p.id === u.id);
           return (
@@ -120,12 +135,17 @@ function NewChatBody({ mode, onClose }: { mode: 'direct' | 'group'; onClose: () 
                 <Avatar seed={u.avatarSeed} src={u.avatarUrl} name="" size={44} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-card-title">{u.name}</span>
-                  {u.about && <span className="block truncate text-caption text-muted">{u.about}</span>}
+                  {u.about && (
+                    <span className="block truncate text-caption text-muted">{u.about}</span>
+                  )}
                 </span>
                 {mode === 'group' && (
                   <span
                     aria-hidden
-                    className={cn('flex size-6 items-center justify-center rounded-pill border-2 border-ink', selected && 'bg-ink text-white')}
+                    className={cn(
+                      'flex size-6 items-center justify-center rounded-pill border-2 border-ink',
+                      selected && 'bg-ink text-white',
+                    )}
                   >
                     {selected && <Check className="size-3.5" strokeWidth={3} />}
                   </span>
@@ -143,7 +163,9 @@ function NewChatBody({ mode, onClose }: { mode: 'direct' | 'group'; onClose: () 
           onClick={() => void createGroup()}
           className="sticky bottom-0 mt-4 min-h-14 w-full rounded-pill bg-ink text-card-title text-cream disabled:opacity-40"
         >
-          {picked.length ? `Create with ${picked.length} ${picked.length === 1 ? 'person' : 'people'}` : 'Pick at least one person'}
+          {picked.length
+            ? `Create with ${picked.length} ${picked.length === 1 ? 'person' : 'people'}`
+            : 'Pick at least one person'}
         </button>
       )}
     </>

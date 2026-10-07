@@ -75,7 +75,10 @@ export function useChat<T>(selector: (s: ChatState) => T): T {
 // ── helpers ────────────────────────────────────────────────────────────────
 
 /** Insert or merge by ID, keeping the list sorted (ULIDs sort by time). */
-function upsertMessages(list: LocalMessage[] | undefined, incoming: LocalMessage[]): LocalMessage[] {
+function upsertMessages(
+  list: LocalMessage[] | undefined,
+  incoming: LocalMessage[],
+): LocalMessage[] {
   const byId = new Map((list ?? []).map((m) => [m.id, m]));
   for (const m of incoming) {
     const prev = byId.get(m.id);
@@ -100,7 +103,11 @@ function setTyping(conversationId: string, userId: string, on: boolean) {
   const key = `${conversationId}:${userId}`;
   clearTimeout(typingTimers.get(key));
   typingTimers.delete(key);
-  if (on) typingTimers.set(key, setTimeout(() => setTyping(conversationId, userId, false), 6_000));
+  if (on)
+    typingTimers.set(
+      key,
+      setTimeout(() => setTyping(conversationId, userId, false), 6_000),
+    );
   set((s) => {
     const conv = { ...(s.typing[conversationId] ?? {}) };
     if (on) conv[userId] = true;
@@ -132,7 +139,11 @@ export async function startChat(me: UserDto): Promise<void> {
         const marks = (s.marks[r.conversationId] ?? []).map((w) => {
           if (w.userId !== r.userId) return w;
           const fwd = (cur: string | null) => (!cur || cur < r.upToId ? r.upToId : cur);
-          return { ...w, delivered: fwd(w.delivered), read: r.status === 'read' ? fwd(w.read) : w.read };
+          return {
+            ...w,
+            delivered: fwd(w.delivered),
+            read: r.status === 'read' ? fwd(w.read) : w.read,
+          };
         });
         return { marks: { ...s.marks, [r.conversationId]: marks } };
       });
@@ -160,7 +171,11 @@ export async function loadConversations(): Promise<void> {
   // Everything that arrived while we were away is now delivered to this device.
   for (const c of list) {
     if (c.lastMessage && c.lastMessage.senderId !== state.me?.id) {
-      getSocket().emit('receipt', { conversationId: c.id, upToId: c.lastMessage.id, status: 'delivered' });
+      getSocket().emit('receipt', {
+        conversationId: c.id,
+        upToId: c.lastMessage.id,
+        status: 'delivered',
+      });
     }
   }
 }
@@ -187,8 +202,13 @@ async function catchUp() {
     Object.entries(state.messages).map(async ([convId, list]) => {
       const lastServer = [...list].reverse().find((m) => !m.local);
       if (!lastServer) return;
-      const missed = await api<MessageDto[]>(`/conversations/${convId}/messages?after=${lastServer.id}`).catch(() => []);
-      if (missed.length) set((s) => ({ messages: { ...s.messages, [convId]: upsertMessages(s.messages[convId], missed) } }));
+      const missed = await api<MessageDto[]>(
+        `/conversations/${convId}/messages?after=${lastServer.id}`,
+      ).catch(() => []);
+      if (missed.length)
+        set((s) => ({
+          messages: { ...s.messages, [convId]: upsertMessages(s.messages[convId], missed) },
+        }));
       await loadMarks(convId);
     }),
   );
@@ -213,7 +233,12 @@ function onMessage(m: MessageDto) {
         }
       : s.conversations;
     const messages = s.messages[m.conversationId]
-      ? { ...s.messages, [m.conversationId]: upsertMessages(s.messages[m.conversationId], [{ ...m, local: undefined }]) }
+      ? {
+          ...s.messages,
+          [m.conversationId]: upsertMessages(s.messages[m.conversationId], [
+            { ...m, local: undefined },
+          ]),
+        }
       : s.messages;
     return { conversations, messages };
   });
@@ -221,7 +246,11 @@ function onMessage(m: MessageDto) {
   if (!state.conversations[m.conversationId]) void refreshConversation(m.conversationId);
   if (m.senderId !== me) {
     const read = state.active === m.conversationId && visible();
-    getSocket().emit('receipt', { conversationId: m.conversationId, upToId: m.id, status: read ? 'read' : 'delivered' });
+    getSocket().emit('receipt', {
+      conversationId: m.conversationId,
+      upToId: m.id,
+      status: read ? 'read' : 'delivered',
+    });
   }
 }
 
@@ -236,7 +265,10 @@ export async function openConversation(id: string): Promise<void> {
   set({ active: id });
   if (!state.messages[id]) {
     const page = await api<MessageDto[]>(`/conversations/${id}/messages?limit=50`);
-    set((s) => ({ messages: { ...s.messages, [id]: upsertMessages(s.messages[id], page) }, hasMore: { ...s.hasMore, [id]: page.length === 50 } }));
+    set((s) => ({
+      messages: { ...s.messages, [id]: upsertMessages(s.messages[id], page) },
+      hasMore: { ...s.hasMore, [id]: page.length === 50 },
+    }));
   }
   await loadMarks(id);
   markRead(id);
@@ -248,9 +280,15 @@ export function closeConversation() {
 
 export function markRead(id: string) {
   const list = state.messages[id];
-  const lastOther = list && [...list].reverse().find((m) => m.senderId !== state.me?.id && !m.local);
-  if (lastOther) getSocket().emit('receipt', { conversationId: id, upToId: lastOther.id, status: 'read' });
-  set((s) => (s.conversations[id] ? { conversations: { ...s.conversations, [id]: { ...s.conversations[id]!, unread: 0 } } } : {}));
+  const lastOther =
+    list && [...list].reverse().find((m) => m.senderId !== state.me?.id && !m.local);
+  if (lastOther)
+    getSocket().emit('receipt', { conversationId: id, upToId: lastOther.id, status: 'read' });
+  set((s) =>
+    s.conversations[id]
+      ? { conversations: { ...s.conversations, [id]: { ...s.conversations[id]!, unread: 0 } } }
+      : {},
+  );
   void api(`/conversations/${id}/read`, { method: 'POST' }).catch(() => {});
 }
 
@@ -258,7 +296,10 @@ export async function loadOlder(id: string): Promise<void> {
   const first = state.messages[id]?.find((m) => !m.local);
   if (!first || state.hasMore[id] === false) return;
   const page = await api<MessageDto[]>(`/conversations/${id}/messages?before=${first.id}&limit=50`);
-  set((s) => ({ messages: { ...s.messages, [id]: upsertMessages(s.messages[id], page) }, hasMore: { ...s.hasMore, [id]: page.length === 50 } }));
+  set((s) => ({
+    messages: { ...s.messages, [id]: upsertMessages(s.messages[id], page) },
+    hasMore: { ...s.hasMore, [id]: page.length === 50 },
+  }));
 }
 
 function emitSend(input: SendMessageInput) {
@@ -273,7 +314,9 @@ function emitSend(input: SendMessageInput) {
           ...s.messages,
           [input.conversationId]: (s.messages[input.conversationId] ?? []).map((m) =>
             // Only touch it while still local: the server echo may have confirmed it before a late/failed ack.
-            m.id === input.id && m.local ? { ...m, local: ok ? undefined : 'failed', status: ok ? 'sent' : m.status } : m,
+            m.id === input.id && m.local
+              ? { ...m, local: ok ? undefined : 'failed', status: ok ? 'sent' : m.status }
+              : m,
           ),
         },
       }));
@@ -281,7 +324,10 @@ function emitSend(input: SendMessageInput) {
 }
 
 /** Optimistic send: the bubble appears instantly with a pending tick, then reconciles on ack. */
-export function sendMessage(conversationId: string, input: Omit<SendMessageInput, 'id' | 'conversationId'>): string {
+export function sendMessage(
+  conversationId: string,
+  input: Omit<SendMessageInput, 'id' | 'conversationId'>,
+): string {
   const me = state.me!;
   const id = ulid();
   const optimistic: LocalMessage = {
@@ -300,9 +346,19 @@ export function sendMessage(conversationId: string, input: Omit<SendMessageInput
   set((s) => {
     const conv = s.conversations[conversationId];
     return {
-      messages: { ...s.messages, [conversationId]: upsertMessages(s.messages[conversationId], [optimistic]) },
+      messages: {
+        ...s.messages,
+        [conversationId]: upsertMessages(s.messages[conversationId], [optimistic]),
+      },
       conversations: conv
-        ? { ...s.conversations, [conversationId]: { ...conv, lastMessage: optimistic, lastMessageAt: optimistic.createdAt } }
+        ? {
+            ...s.conversations,
+            [conversationId]: {
+              ...conv,
+              lastMessage: optimistic,
+              lastMessageAt: optimistic.createdAt,
+            },
+          }
         : s.conversations,
     };
   });
@@ -314,7 +370,9 @@ function resend(m: LocalMessage) {
   set((s) => ({
     messages: {
       ...s.messages,
-      [m.conversationId]: (s.messages[m.conversationId] ?? []).map((x) => (x.id === m.id ? { ...x, local: 'pending' } : x)),
+      [m.conversationId]: (s.messages[m.conversationId] ?? []).map((x) =>
+        x.id === m.id ? { ...x, local: 'pending' } : x,
+      ),
     },
   }));
   emitSend({
@@ -349,7 +407,10 @@ export function signalTyping(conversationId: string) {
   }, 4_000);
 }
 
-export async function patchMembership(id: string, flags: { pinned?: boolean; muted?: boolean; aiEnabled?: boolean }) {
+export async function patchMembership(
+  id: string,
+  flags: { pinned?: boolean; muted?: boolean; aiEnabled?: boolean },
+) {
   const c = await api<ConversationDto>(`/conversations/${id}/me`, { method: 'PATCH', json: flags });
   set((s) => ({ conversations: { ...s.conversations, [id]: c } }));
 }

@@ -13,9 +13,21 @@ const LANG_LABEL: Record<Lang, string> = { en: 'English', hi: 'हिन्द�
 const LANG_SHORT: Record<Lang, string> = { en: 'EN', hi: 'HI', kn: 'KN', ta: 'TA' };
 
 const slides = [
-  { title: ['Chats that', 'keep up'], body: 'Real-time messaging with ticks, typing and presence — every message rides Kafka on Aiven.', color: 'bg-coral' },
-  { title: ['Catch me', 'up'], body: 'Back to 200 unread? Get the summary, decisions and deadlines in one tap.', color: 'bg-mustard' },
-  { title: ['Ask your', 'chats'], body: '“When is the demo?” — semantic search across every chat you’re in, in your language.', color: 'bg-periwinkle' },
+  {
+    title: ['Chats that', 'keep up'],
+    body: 'Real-time messaging with ticks, typing and presence — every message rides Kafka on Aiven.',
+    color: 'bg-coral',
+  },
+  {
+    title: ['Catch me', 'up'],
+    body: 'Back to 200 unread? Get the summary, decisions and deadlines in one tap.',
+    color: 'bg-mustard',
+  },
+  {
+    title: ['Ask your', 'chats'],
+    body: '“When is the demo?” — semantic search across every chat you’re in, in your language.',
+    color: 'bg-periwinkle',
+  },
 ];
 
 interface DemoAccount {
@@ -47,7 +59,9 @@ export function Welcome() {
       /* storage unavailable */
     }
     void refresh().then((r) => r && router.replace('/'));
-    api<DemoAccount[]>('/auth/demo-accounts').then(setDemo).catch(() => setDemo([]));
+    api<DemoAccount[]>('/auth/demo-accounts')
+      .then(setDemo)
+      .catch(() => setDemo([]));
     api<{ emailLogin: boolean }>('/auth/config')
       .then((c) => setEmailLogin(c.emailLogin))
       .catch(() => {});
@@ -69,7 +83,8 @@ export function Welcome() {
 
   const finish = async (r: AuthResult) => {
     acceptAuth(r);
-    if (r.user.lang !== lang) await api('/users/me', { method: 'PATCH', json: { lang } }).catch(() => {});
+    if (r.user.lang !== lang)
+      await api('/users/me', { method: 'PATCH', json: { lang } }).catch(() => {});
     router.replace('/');
   };
 
@@ -133,7 +148,12 @@ export function Welcome() {
             onClick={() => setSlide(i)}
             className="flex size-11 items-center justify-center"
           >
-            <span className={cn('h-2 rounded-pill transition-all', i === slide ? 'w-6 bg-white' : 'w-2 bg-white/30')} />
+            <span
+              className={cn(
+                'h-2 rounded-pill transition-all',
+                i === slide ? 'w-6 bg-white' : 'w-2 bg-white/30',
+              )}
+            />
           </button>
         ))}
       </div>
@@ -150,7 +170,13 @@ export function Welcome() {
             <h2 className="mb-3 text-card-title text-white/80">Try as judge</h2>
             <div className="flex flex-col gap-2">
               {demo === null &&
-                [0, 1, 2].map((i) => <div key={i} className="h-16 animate-pulse rounded-pill bg-ink-raised" aria-hidden />)}
+                [0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="h-16 animate-pulse rounded-pill bg-ink-raised"
+                    aria-hidden
+                  />
+                ))}
               {demo?.length === 0 && (
                 <p className="rounded-card bg-ink-raised p-4 text-body text-white/70">
                   Demo accounts aren’t seeded yet. Run <code>pnpm seed</code>.
@@ -162,7 +188,16 @@ export function Welcome() {
                   type="button"
                   disabled={busy}
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => void run(async () => finish(await api<AuthResult>('/auth/demo', { method: 'POST', json: { userId: d.id } })))}
+                  onClick={() =>
+                    void run(async () =>
+                      finish(
+                        await api<AuthResult>('/auth/demo', {
+                          method: 'POST',
+                          json: { userId: d.id },
+                        }),
+                      ),
+                    )
+                  }
                   className="flex min-h-16 items-center gap-3 rounded-pill bg-cream py-2 pr-2 pl-2 text-left text-ink disabled:opacity-60"
                 >
                   <Avatar seed={d.avatarSeed} src={d.avatarUrl} name="" size={48} />
@@ -209,10 +244,18 @@ export function Welcome() {
               className="min-h-14 rounded-pill bg-cream px-5 text-body text-ink outline-none"
             />
             <div className="flex gap-2">
-              <button type="button" onClick={() => setStep('pick')} className="min-h-12 flex-1 rounded-pill border-2 border-white/25">
+              <button
+                type="button"
+                onClick={() => setStep('pick')}
+                className="min-h-12 flex-1 rounded-pill border-2 border-white/25"
+              >
                 Back
               </button>
-              <button type="submit" disabled={busy} className="min-h-12 flex-[2] rounded-pill bg-cream font-semibold text-ink">
+              <button
+                type="submit"
+                disabled={busy}
+                className="min-h-12 flex-[2] rounded-pill bg-cream font-semibold text-ink"
+              >
                 Send code
               </button>
             </div>
@@ -223,7 +266,14 @@ export function Welcome() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              void run(async () => finish(await api<AuthResult>('/auth/otp/verify', { method: 'POST', json: { email, code } })));
+              void run(async () =>
+                finish(
+                  await api<AuthResult>('/auth/otp/verify', {
+                    method: 'POST',
+                    json: { email, code },
+                  }),
+                ),
+              );
             }}
             className="flex flex-col gap-3"
           >
@@ -245,7 +295,11 @@ export function Welcome() {
               <IconButton label="Back" tone="hub" onClick={() => setStep('email')}>
                 <ArrowRight className="rotate-180" />
               </IconButton>
-              <button type="submit" disabled={busy || code.length !== 6} className="min-h-12 flex-1 rounded-pill bg-cream font-semibold text-ink disabled:opacity-50">
+              <button
+                type="submit"
+                disabled={busy || code.length !== 6}
+                className="min-h-12 flex-1 rounded-pill bg-cream font-semibold text-ink disabled:opacity-50"
+              >
                 Verify & continue
               </button>
             </div>

@@ -1,0 +1,52 @@
+# Render Blueprint: api + worker. Secrets are `sync: false`, so Render asks for them in the dashboard.
+# CA certs: use the *_CA_CERT_BASE64 variables (base64 -i ca.pem | tr -d '\n').
+services:
+  - type: web
+    name: pulse-api
+    runtime: node
+    plan: free
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @pulse/api build && pnpm migrate
+    startCommand: node apps/api/dist/index.js
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: '22'
+      - { key: WEB_ORIGIN, sync: false }
+      - { key: JWT_SECRET, generateValue: true }
+      - { key: KEEP_WARM_URLS, sync: false }
+      - { key: MYSQL_URL, sync: false }
+      - { key: MYSQL_CA_CERT_BASE64, sync: false }
+      - { key: PG_URL, sync: false }
+      - { key: PG_CA_CERT_BASE64, sync: false }
+      - { key: KAFKA_BROKERS, sync: false }
+      - { key: KAFKA_SASL_USERNAME, sync: false }
+      - { key: KAFKA_SASL_PASSWORD, sync: false }
+      - { key: KAFKA_CA_CERT_BASE64, sync: false }
+      - { key: VALKEY_URL, sync: false }
+      - { key: OPENSEARCH_URL, sync: false }
+      - { key: AI_API_KEY, sync: false }
+      - { key: RESEND_API_KEY, sync: false }
+  - type: web
+    name: pulse-worker
+    runtime: node
+    plan: free
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @pulse/worker build
+    startCommand: node apps/worker/dist/index.js
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: '22'
+      - { key: MYSQL_URL, sync: false }
+      - { key: MYSQL_CA_CERT_BASE64, sync: false }
+      - { key: PG_URL, sync: false }
+      - { key: PG_CA_CERT_BASE64, sync: false }
+      - { key: KAFKA_BROKERS, sync: false }
+      - { key: KAFKA_SASL_USERNAME, sync: false }
+      - { key: KAFKA_SASL_PASSWORD, sync: false }
+      - { key: KAFKA_CA_CERT_BASE64, sync: false }
+      - { key: VALKEY_URL, sync: false }
+      - { key: AI_API_KEY, sync: false }

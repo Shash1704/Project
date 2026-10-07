@@ -11,11 +11,24 @@ const { disconnectProducer } = await import('./kafka');
 const { closeDb, closeValkey } = await import('@pulse/db');
 
 const http = createServer(createApp());
+// Hosts like Render inject PORT; fall back to API_PORT locally.
+const port = Number(process.env.PORT) || env.API_PORT;
 const io = createSocketServer(http);
 
-http.listen(env.API_PORT, () => {
-  console.log(`[api] listening on :${env.API_PORT}`);
+http.listen(port, () => {
+  console.log(`[api] listening on :${port}`);
 });
+
+// Free-tier hosts sleep idle services: keep the worker (and anything else listed) warm.
+const keepWarm = (process.env.KEEP_WARM_URLS ?? '')
+  .split(',')
+  .map((u) => u.trim())
+  .filter(Boolean);
+if (keepWarm.length) {
+  setInterval(() => {
+    for (const u of keepWarm) void fetch(u).catch(() => {});
+  }, 10 * 60_000).unref();
+}
 
 let stopping = false;
 const shutdown = async () => {

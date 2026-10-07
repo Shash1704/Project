@@ -19,9 +19,15 @@ export interface CatchUp {
 function Bolded({ text }: { text: string }) {
   return (
     <>
-      {text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
-        part.startsWith('**') && part.endsWith('**') ? <b key={i}>{part.slice(2, -2)}</b> : <span key={i}>{part}</span>,
-      )}
+      {text
+        .split(/(\*\*[^*]+\*\*)/g)
+        .map((part, i) =>
+          part.startsWith('**') && part.endsWith('**') ? (
+            <b key={i}>{part.slice(2, -2)}</b>
+          ) : (
+            <span key={i}>{part}</span>
+          ),
+        )}
     </>
   );
 }
@@ -45,7 +51,10 @@ export function CatchUpSheet({
     let alive = true;
     api<CatchUp>(`/ai/conversations/${conversationId}/catch-up`, { method: 'POST' })
       .then((d) => alive && setData(d))
-      .catch((e) => alive && setError(e instanceof ApiError ? e.message : 'Could not summarise right now'));
+      .catch(
+        (e) =>
+          alive && setError(e instanceof ApiError ? e.message : 'Could not summarise right now'),
+      );
     return () => {
       alive = false;
     };
@@ -64,7 +73,10 @@ export function CatchUpSheet({
       eyebrow={
         <p className="mb-1 flex items-center gap-2 text-caption text-muted">
           <span aria-hidden className="size-2 rounded-pill bg-highlight" />
-          AI summary{data ? ` · last ${data.messageCount} messages${data.cached ? ' · cached in Valkey' : ''}` : ''}
+          AI summary
+          {data
+            ? ` · last ${data.messageCount} messages${data.cached ? ' · cached in Valkey' : ''}`
+            : ''}
         </p>
       }
     >
@@ -75,7 +87,11 @@ export function CatchUpSheet({
       ) : !data ? (
         <div className="flex flex-col gap-2" role="status" aria-label="Summarising">
           {[90, 75, 85, 60].map((w, i) => (
-            <div key={i} className="h-4 animate-pulse rounded-pill bg-cream-deep" style={{ width: `${w}%` }} />
+            <div
+              key={i}
+              className="h-4 animate-pulse rounded-pill bg-cream-deep"
+              style={{ width: `${w}%` }}
+            />
           ))}
           <div className="mt-4 h-12 animate-pulse rounded-pill bg-cream-deep" />
           <div className="h-12 animate-pulse rounded-pill bg-cream-deep" />
@@ -89,14 +105,38 @@ export function CatchUpSheet({
               </li>
             ))}
           </ul>
-          <Section title="Decisions" items={data.decisions.map((d) => ({ id: d.messageId, text: d.text, icon: <Gavel /> }))} onJump={jump} />
           <Section
-            title="Deadlines"
-            items={data.deadlines.map((d) => ({ id: d.messageId, text: `${d.text} · ${d.when}`, icon: <CalendarClock /> }))}
+            title="Decisions"
+            items={data.decisions.map((d) => ({ id: d.messageId, text: d.text, icon: <Gavel /> }))}
             onJump={jump}
           />
-          <Section title="Mentions" items={data.mentions.map((d) => ({ id: d.messageId, text: `@${d.who} · ${d.text}`, icon: <AtSign /> }))} onJump={jump} />
-          <Section title="To-dos" items={data.actionItems.map((d) => ({ id: d.messageId, text: d.text, icon: <CheckCircle2 /> }))} onJump={jump} />
+          <Section
+            title="Deadlines"
+            items={data.deadlines.map((d) => ({
+              id: d.messageId,
+              text: `${d.text} · ${d.when}`,
+              icon: <CalendarClock />,
+            }))}
+            onJump={jump}
+          />
+          <Section
+            title="Mentions"
+            items={data.mentions.map((d) => ({
+              id: d.messageId,
+              text: `@${d.who} · ${d.text}`,
+              icon: <AtSign />,
+            }))}
+            onJump={jump}
+          />
+          <Section
+            title="To-dos"
+            items={data.actionItems.map((d) => ({
+              id: d.messageId,
+              text: d.text,
+              icon: <CheckCircle2 />,
+            }))}
+            onJump={jump}
+          />
         </>
       )}
     </Sheet>

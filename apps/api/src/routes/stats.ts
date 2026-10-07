@@ -21,7 +21,9 @@ async function kafkaAdmin() {
   return admin;
 }
 
-async function timed<T>(fn: () => Promise<T>): Promise<{ ms: number; value: T | null; ok: boolean }> {
+async function timed<T>(
+  fn: () => Promise<T>,
+): Promise<{ ms: number; value: T | null; ok: boolean }> {
   const t = performance.now();
   try {
     const value = await fn();
@@ -41,7 +43,11 @@ statsRouter.get(
         const [rows] = await db().query<RowDataPacket[]>(
           'SELECT (SELECT COUNT(*) FROM users) AS users, (SELECT COUNT(*) FROM conversations) AS conversations',
         );
-        return { messages: await countMessages(), users: Number(rows[0]?.users), conversations: Number(rows[0]?.conversations) };
+        return {
+          messages: await countMessages(),
+          users: Number(rows[0]?.users),
+          conversations: Number(rows[0]?.conversations),
+        };
       }),
       timed(async () => {
         const [hit, miss, produced, delivered, persisted, ...consumed] = await v.mget(
@@ -72,14 +78,27 @@ statsRouter.get(
         const topics = await Promise.all(
           ALL_TOPICS.map(async (topic) => {
             const offs = await a.fetchTopicOffsets(topic);
-            return { topic, partitions: offs.length, end: offs.reduce((s, o) => s + Number(o.high), 0), offs };
+            return {
+              topic,
+              partitions: offs.length,
+              end: offs.reduce((s, o) => s + Number(o.high), 0),
+              offs,
+            };
           }),
         );
         const lag = await Promise.all(
           GROUPS.map(async (group) => {
-            const topic = group === 'receipts' ? 'messages.receipts' : group === 'presence' ? 'presence.events' : 'messages.sent';
+            const topic =
+              group === 'receipts'
+                ? 'messages.receipts'
+                : group === 'presence'
+                  ? 'presence.events'
+                  : 'messages.sent';
             const t = topics.find((x) => x.topic === topic)!;
-            const [committed] = await a.fetchOffsets({ groupId: `pulse-${group}`, topics: [topic] });
+            const [committed] = await a.fetchOffsets({
+              groupId: `pulse-${group}`,
+              topics: [topic],
+            });
             const total = (committed?.partitions ?? []).reduce((s, p) => {
               const high = Number(t.offs.find((o) => o.partition === p.partition)?.high ?? 0);
               const off = Number(p.offset);
@@ -94,11 +113,24 @@ statsRouter.get(
         const rates = Object.fromEntries(
           topics.map((t) => [
             t.topic,
-            lastSample ? Math.max(0, (t.end - (lastSample.offsets[t.topic] ?? t.end)) / ((now - lastSample.at) / 1000)) : 0,
+            lastSample
+              ? Math.max(
+                  0,
+                  (t.end - (lastSample.offsets[t.topic] ?? t.end)) / ((now - lastSample.at) / 1000),
+                )
+              : 0,
           ]),
         );
         lastSample = { at: now, offsets };
-        return { topics: topics.map(({ topic, partitions, end }) => ({ topic, partitions, messages: end, perSec: rates[topic] })), lag };
+        return {
+          topics: topics.map(({ topic, partitions, end }) => ({
+            topic,
+            partitions,
+            messages: end,
+            perSec: rates[topic],
+          })),
+          lag,
+        };
       }),
     ]);
     res.json({ at: new Date().toISOString(), mysql, valkey: cache, kafka });

@@ -47,7 +47,9 @@ function Subtitle({ c }: { c: ConversationDto }) {
     const p = other && presence[other.userId];
     return <span>{p?.online ? 'online' : lastSeen(p?.lastSeenAt ?? null)}</span>;
   }
-  const online = c.members.filter((m) => m.userId !== me?.id && presence[m.userId]?.online).map((m) => m.name.split(' ')[0]);
+  const online = c.members
+    .filter((m) => m.userId !== me?.id && presence[m.userId]?.online)
+    .map((m) => m.name.split(' ')[0]);
   return (
     <span>
       {c.members.length} members{online.length ? ` · ${online.slice(0, 3).join(', ')} online` : ''}
@@ -100,7 +102,9 @@ export function ConversationView({ id }: { id: string }) {
     stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
     if (el.scrollTop < 200 && hasMore) {
       const before = el.scrollHeight;
-      void loadOlder(id).then(() => requestAnimationFrame(() => (el.scrollTop += el.scrollHeight - before)));
+      void loadOlder(id).then(() =>
+        requestAnimationFrame(() => (el.scrollTop += el.scrollHeight - before)),
+      );
     }
   };
 
@@ -117,12 +121,20 @@ export function ConversationView({ id }: { id: string }) {
         {listLoaded ? (
           <>
             <p className="text-title">Chat not found</p>
-            <button type="button" onClick={() => router.push('/')} className="min-h-11 rounded-pill bg-ink px-5 text-cream">
+            <button
+              type="button"
+              onClick={() => router.push('/')}
+              className="min-h-11 rounded-pill bg-ink px-5 text-cream"
+            >
               Back to chats
             </button>
           </>
         ) : (
-          <div className="h-10 w-48 animate-pulse rounded-pill bg-cream-deep" aria-label="Loading chat" role="status" />
+          <div
+            className="h-10 w-48 animate-pulse rounded-pill bg-cream-deep"
+            aria-label="Loading chat"
+            role="status"
+          />
         )}
       </div>
     );
@@ -136,7 +148,8 @@ export function ConversationView({ id }: { id: string }) {
     setDraft('');
   };
 
-  const nameOf = (uid: string) => conv.members.find((m) => m.userId === uid)?.name ?? 'Former member';
+  const nameOf = (uid: string) =>
+    conv.members.find((m) => m.userId === uid)?.name ?? 'Former member';
 
   return (
     <div className="flex h-dvh flex-col bg-cream text-ink">
@@ -147,7 +160,9 @@ export function ConversationView({ id }: { id: string }) {
         right={
           <>
             <AvatarStack
-              people={conv.members.filter((m) => m.userId !== me?.id).map((m) => ({ seed: m.avatarSeed, name: m.name, src: m.avatarUrl }))}
+              people={conv.members
+                .filter((m) => m.userId !== me?.id)
+                .map((m) => ({ seed: m.avatarSeed, name: m.name, src: m.avatarUrl }))}
               size={40}
               max={3}
             />
@@ -158,11 +173,22 @@ export function ConversationView({ id }: { id: string }) {
         }
       />
 
-      <div ref={scrollRef} onScroll={onScroll} className="flex-1 overflow-y-auto px-screen" aria-live="polite">
-        <ConversationTitle title={conv.title} subtitle={<Subtitle c={conv} />} layoutId={`title-${conv.id}`} />
+      <div
+        ref={scrollRef}
+        onScroll={onScroll}
+        className="flex-1 overflow-y-auto px-screen"
+        aria-live="polite"
+      >
+        <ConversationTitle
+          title={conv.title}
+          subtitle={<Subtitle c={conv} />}
+          layoutId={`title-${conv.id}`}
+        />
         {conv.aiEnabled && conv.kind === 'group' && (messages?.length ?? 0) >= 10 && (
           <div className="mb-4 flex justify-center">
-            <AiChip onClick={() => setCatchUp(true)}>{unreadAtOpen >= 5 ? `Catch me up · ${unreadAtOpen} new` : 'Catch me up'}</AiChip>
+            <AiChip onClick={() => setCatchUp(true)}>
+              {unreadAtOpen >= 5 ? `Catch me up · ${unreadAtOpen} new` : 'Catch me up'}
+            </AiChip>
           </div>
         )}
         {error && (
@@ -173,13 +199,19 @@ export function ConversationView({ id }: { id: string }) {
         {!messages ? (
           <div className="flex flex-col gap-2" role="status" aria-label="Loading messages">
             {[60, 40, 70, 50].map((w, i) => (
-              <div key={i} className={`h-12 animate-pulse rounded-bubble bg-cream-deep ${i % 2 ? 'self-end' : ''}`} style={{ width: `${w}%` }} />
+              <div
+                key={i}
+                className={`h-12 animate-pulse rounded-bubble bg-cream-deep ${i % 2 ? 'self-end' : ''}`}
+                style={{ width: `${w}%` }}
+              />
             ))}
           </div>
         ) : messages.length === 0 ? (
           <div className="mt-6 rounded-card bg-cream-deep p-6">
             <p className="text-title">Say hi 👋</p>
-            <p className="mt-1 text-body text-muted">Messages here are delivered through Kafka in real time.</p>
+            <p className="mt-1 text-body text-muted">
+              Messages here are delivered through Kafka in real time.
+            </p>
           </div>
         ) : (
           <div className="flex flex-col gap-2 pb-4">
@@ -187,11 +219,14 @@ export function ConversationView({ id }: { id: string }) {
               const prev = messages[i - 1];
               const newDay = !prev || dayLabel(prev.createdAt) !== dayLabel(m.createdAt);
               const mine = m.senderId === me?.id;
-              const showAuthor = conv.kind === 'group' && !mine && (newDay || prev?.senderId !== m.senderId);
+              const showAuthor =
+                conv.kind === 'group' && !mine && (newDay || prev?.senderId !== m.senderId);
               return (
                 <Fragment key={m.id}>
                   {newDay && (
-                    <p className="my-2 self-center rounded-pill bg-cream-deep px-3 py-1 text-caption text-muted">{dayLabel(m.createdAt)}</p>
+                    <p className="my-2 self-center rounded-pill bg-cream-deep px-3 py-1 text-caption text-muted">
+                      {dayLabel(m.createdAt)}
+                    </p>
                   )}
                   <MessageRow
                     m={m}
@@ -205,7 +240,12 @@ export function ConversationView({ id }: { id: string }) {
             })}
             <AnimatePresence>
               {typers.map((t) => (
-                <TypingIndicator key={t.userId} name={t.name} seed={t.avatarSeed} src={t.avatarUrl} />
+                <TypingIndicator
+                  key={t.userId}
+                  name={t.name}
+                  seed={t.avatarSeed}
+                  src={t.avatarUrl}
+                />
               ))}
             </AnimatePresence>
           </div>
@@ -226,7 +266,12 @@ export function ConversationView({ id }: { id: string }) {
           </p>
         </AiTray>
       </div>
-      <CatchUpSheet conversationId={conv.id} open={catchUp} onClose={() => setCatchUp(false)} onJump={jumpTo} />
+      <CatchUpSheet
+        conversationId={conv.id}
+        open={catchUp}
+        onClose={() => setCatchUp(false)}
+        onJump={jumpTo}
+      />
       <Composer
         value={draft}
         onChange={setDraft}

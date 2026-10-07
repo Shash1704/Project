@@ -218,3 +218,10 @@ Chat Pulse, Under the Hood, a seed script (3 judge accounts; 5 groups with reali
 
 <!-- One dated line per phase: YYYY-MM-DD — Phase N — status — open issues -->
 2026-10-07 — Phase 0 — done — awaiting Aiven services + `.env` to see `pnpm health` go 5×OK; `muted` raised to 0.74 alpha for AA; `/design/reference.png` not yet added
+2026-10-07 — Phase 1 — code complete, NOT live — design system + /design-preview, auth (judge demo, OTP, sessions), Socket.IO + Kafka pipeline, worker consumers, chat UI; blocked on Aiven .env + Vercel/Render hookup; no browser check against real services yet
+2026-10-07 — Phase 2 — partial — groups, receipts (watermarks), presence, typing, unread, photos done; media upload + OpenSearch search not built
+2026-10-07 — Phase 3 — partial — skeletons, empty states, reduced motion, a11y labels done; shared-element card→chat transition and long-press menu wiring not done
+2026-10-07 — Phase 4 — partial — Catch Me Up (Claude, cached in Valkey) + per-chat AI opt-in done; Ask Your Chats, Live Translate, Smart Replies, Tone Check, Moments not built
+2026-10-07 — Phase 5 — partial — seed (3 judges, 5 multilingual groups, 170+ msg group), Under the Hood, render.yaml/vercel.json, keep-warm, README done; Chat Pulse + load test not done
+2026-10-07 — note — an outside process (likely Antigravity IDE agent) kept writing mock files into the repo; quarantined 3 times, see scratchpad/quarantine
+

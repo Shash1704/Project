@@ -33,7 +33,12 @@ class AnthropicProvider implements LlmProvider {
     this.client = new Anthropic({ apiKey, maxRetries: 2, timeout: 60_000 });
   }
 
-  async structured<S extends z.ZodType>({ system, prompt, schema, maxTokens = 4000 }: StructuredRequest<S>): Promise<z.infer<S>> {
+  async structured<S extends z.ZodType>({
+    system,
+    prompt,
+    schema,
+    maxTokens = 4000,
+  }: StructuredRequest<S>): Promise<z.infer<S>> {
     const res = await this.client.beta.messages.parse({
       model: this.model,
       max_tokens: maxTokens,
@@ -44,7 +49,8 @@ class AnthropicProvider implements LlmProvider {
       messages: [{ role: 'user', content: prompt }],
     });
     if (res.stop_reason === 'refusal') throw new AiUnavailableError('The AI declined this request');
-    if (res.parsed_output == null) throw new AiUnavailableError('The AI returned an unexpected format');
+    if (res.parsed_output == null)
+      throw new AiUnavailableError('The AI returned an unexpected format');
     return res.parsed_output as z.infer<S>;
   }
 }
@@ -65,11 +71,15 @@ export function llm(): LlmProvider | null {
 export const catchUpSchema = z.object({
   summary: z
     .array(z.string())
-    .describe('At most 5 short lines. Wrap the 1-3 most important words of each line in **double asterisks**.'),
+    .describe(
+      'At most 5 short lines. Wrap the 1-3 most important words of each line in **double asterisks**.',
+    ),
   decisions: z.array(z.object({ text: z.string(), ref: z.number().int() })),
   deadlines: z.array(z.object({ text: z.string(), when: z.string(), ref: z.number().int() })),
   mentions: z.array(z.object({ who: z.string(), text: z.string(), ref: z.number().int() })),
-  actionItems: z.array(z.object({ text: z.string(), ref: z.number().int() })).describe('At most 3 short to-dos'),
+  actionItems: z
+    .array(z.object({ text: z.string(), ref: z.number().int() }))
+    .describe('At most 3 short to-dos'),
 });
 export type CatchUpRaw = z.infer<typeof catchUpSchema>;
 
@@ -85,7 +95,10 @@ Messages may be in English, Hindi, Kannada or Tamil (often mixed); always answer
 Every item must cite the [ref] number of the single message it comes from. Only include decisions the group actually agreed on,
 deadlines with an explicit time or date, and @mentions of a person by name. Skip small talk. Never invent anything.`;
 
-export async function catchMeUp(lines: ChatLine[], opts: { title: string; readerLang: string }): Promise<CatchUpRaw> {
+export async function catchMeUp(
+  lines: ChatLine[],
+  opts: { title: string; readerLang: string },
+): Promise<CatchUpRaw> {
   const ai = llm();
   if (!ai) throw new AiUnavailableError('AI is not configured on this server');
   const transcript = lines.map((l) => `[${l.ref}] ${l.at} ${l.author}: ${l.text}`).join('\n');

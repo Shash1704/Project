@@ -69,7 +69,10 @@ export async function getToken(): Promise<string | null> {
   return (await refresh())?.accessToken ?? null;
 }
 
-export async function api<T>(path: string, init: RequestInit & { json?: unknown } = {}): Promise<T> {
+export async function api<T>(
+  path: string,
+  init: RequestInit & { json?: unknown } = {},
+): Promise<T> {
   const doFetch = async (token: string | null) => {
     const headers = new Headers(init.headers);
     if (token) headers.set('Authorization', `Bearer ${token}`);

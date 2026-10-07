@@ -1,5 +1,13 @@
 import { AiUnavailableError, catchMeUp, type ChatLine } from '@pulse/ai';
-import { getConversation, getUser, getUsers, listMessages, membership, rateLimit, valkey } from '@pulse/db';
+import {
+  getConversation,
+  getUser,
+  getUsers,
+  listMessages,
+  membership,
+  rateLimit,
+  valkey,
+} from '@pulse/db';
 import { ulid } from '@pulse/shared';
 import { Router } from 'express';
 import { requireAuth } from '../auth/middleware';
@@ -10,7 +18,12 @@ export const aiRouter = Router();
 aiRouter.use(requireAuth);
 
 const WINDOW = 150;
-const LANG_NAME: Record<string, string> = { en: 'English', hi: 'Hindi', kn: 'Kannada', ta: 'Tamil' };
+const LANG_NAME: Record<string, string> = {
+  en: 'English',
+  hi: 'Hindi',
+  kn: 'Kannada',
+  ta: 'Tamil',
+};
 
 export interface CatchUpDto {
   summary: string[];
@@ -34,7 +47,8 @@ aiRouter.post(
     const m = await membership(id, req.userId);
     if (!m) throw notFound('Conversation not found');
     if (!m.aiEnabled) throw forbidden('Turn on AI for this chat first');
-    if (!(await rateLimit('ai', req.userId, 20, 600))) throw new HttpError(429, 'AI is cooling down, try again in a minute');
+    if (!(await rateLimit('ai', req.userId, 20, 600)))
+      throw new HttpError(429, 'AI is cooling down, try again in a minute');
 
     const [conv, me, messages] = await Promise.all([
       getConversation(id, req.userId),
@@ -87,7 +101,12 @@ aiRouter.post(
     };
     await v.set(key, JSON.stringify(dto), 'EX', 24 * 3600);
     await v.set(`summary:latest:${id}`, JSON.stringify(dto), 'EX', 7 * 24 * 3600);
-    void publishAnalytics({ type: 'ai_used', userId: req.userId, conversationId: id, meta: { feature: 'catch_up' } });
+    void publishAnalytics({
+      type: 'ai_used',
+      userId: req.userId,
+      conversationId: id,
+      meta: { feature: 'catch_up' },
+    });
     res.json(dto);
   }),
 );

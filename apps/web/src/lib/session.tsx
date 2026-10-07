@@ -10,7 +10,13 @@ const SessionContext = createContext<UserDto | null>(null);
 export const useMe = () => useContext(SessionContext);
 
 /** Restores the session from the refresh cookie, starts the realtime connection, or sends to /welcome. */
-export function SessionGate({ children, fallback }: { children: React.ReactNode; fallback: React.ReactNode }) {
+export function SessionGate({
+  children,
+  fallback,
+}: {
+  children: React.ReactNode;
+  fallback: React.ReactNode;
+}) {
   const router = useRouter();
   const [user, setUser] = useState<UserDto | null>(null);
 
@@ -35,5 +41,7 @@ export function SessionGate({ children, fallback }: { children: React.ReactNode;
     };
   }, [router]);
 
-  return <SessionContext.Provider value={user}>{user ? children : fallback}</SessionContext.Provider>;
+  return (
+    <SessionContext.Provider value={user}>{user ? children : fallback}</SessionContext.Provider>
+  );
 }
