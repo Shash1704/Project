@@ -198,7 +198,7 @@ const groups: { title: string; members: string[]; lines: Line[]; days: number; a
   {
     title: 'Hackathon Crew',
     members: ['meera', 'arjun', 'zoya', 'dev', 'nila', 'asha', 'rohan', 'kavya', 'sam'],
-    lines: expand(hackathonCore, 110, ['meera', 'arjun', 'zoya', 'dev', 'nila']),
+    lines: expand(hackathonCore, 220, ['meera', 'arjun', 'zoya', 'dev', 'nila']),
     days: 3,
     ai: true,
   },
@@ -414,16 +414,19 @@ export async function seed({ resetFirst = false } = {}): Promise<{
       [id, key, uid[d.a]],
     );
     await pool.query(
-      'INSERT INTO conversation_members (conversation_id, user_id, role, pinned) VALUES ?, ?',
+      'INSERT INTO conversation_members (conversation_id, user_id, role, pinned) VALUES ?',
       [
-        [id, uid[d.a], 'admin', d.pinFor === d.a ? 1 : 0],
-        [id, uid[d.b], 'admin', d.pinFor === d.b ? 1 : 0],
+        [
+          [id, uid[d.a], 'admin', d.pinFor === d.a ? 1 : 0],
+          [id, uid[d.b], 'admin', d.pinFor === d.b ? 1 : 0],
+        ],
       ],
     );
     await writeHistory(id, d.lines, 1);
   }
 
-  // Derived caches rebuild from MySQL on next read.
+  // Derived caches rebuild from MySQL on next read (skip if Valkey isn't configured yet).
+  if (!process.env.VALKEY_URL?.trim()) return { users: people.length, messages: messageCount };
   const v = valkey();
   for (const pattern of ['members:*', 'convs:*', 'unread:*', 'chats:*']) {
     let cursor = '0';
@@ -442,7 +445,7 @@ async function main() {
   const r = await seed({ resetFirst: process.argv.includes('--reset') });
   if (r.users) console.log(`Seeded ${r.users} people and ${r.messages} messages.`);
   await closeDb();
-  await closeValkey();
+  if (process.env.VALKEY_URL?.trim()) await closeValkey();
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

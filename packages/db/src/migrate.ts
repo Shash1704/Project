@@ -68,7 +68,8 @@ export async function migratePg(log = console.log): Promise<void> {
 async function main() {
   loadRootEnv();
   await migrateMysql();
-  await migratePg();
+  if (process.env.PG_URL?.trim()) await migratePg();
+  else console.log('pg: PG_URL not set, skipped (needed later for semantic search)');
   console.log('Migrations up to date.');
   await closeDb();
 }
