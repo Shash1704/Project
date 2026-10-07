@@ -5,6 +5,7 @@ services:
     name: pulse-api
     runtime: node
     plan: free
+    region: singapore
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @pulse/api build && pnpm migrate
     startCommand: node apps/api/dist/index.js
     healthCheckPath: /healthz
@@ -32,6 +33,7 @@ services:
     name: pulse-worker
     runtime: node
     plan: free
+    region: singapore
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @pulse/worker build
     startCommand: node apps/worker/dist/index.js
     healthCheckPath: /healthz
