@@ -2,7 +2,7 @@
 
 import type { ConversationDto } from '@pulse/shared';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LogOut, Menu, MessageCirclePlus, Users } from 'lucide-react';
+import { Gauge, LogOut, Menu, MessageCirclePlus, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { cardColorFor } from '@pulse/ui';
@@ -85,6 +85,16 @@ export function ChatList({ className }: { className?: string }) {
               >
                 <p className="px-3 pt-2 pb-1 text-caption text-muted">Signed in as</p>
                 <p className="truncate px-3 pb-2 text-card-title">{me?.name}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAccountMenu(false);
+                    router.push('/under-the-hood');
+                  }}
+                  className="mb-2 flex min-h-11 w-full items-center gap-2 rounded-pill bg-cream-deep px-4 text-body"
+                >
+                  <Gauge className="size-4" /> Under the hood
+                </button>
                 <button
                   type="button"
                   onClick={() => void logout()}

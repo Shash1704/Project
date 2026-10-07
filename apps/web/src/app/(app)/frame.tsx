@@ -22,7 +22,8 @@ export function Splash() {
 /** Mobile: list or conversation. Desktop: 380px black list column + cream conversation pane. */
 export function AppFrame({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const inConversation = pathname.startsWith('/c/');
+  // Any route other than the list itself takes over the screen on mobile.
+  const inConversation = pathname !== '/';
   return (
     <SessionGate fallback={<Splash />}>
       <div className="bg-ink md:grid md:h-dvh md:grid-cols-[var(--pulse-size-desktop-list-width)_1fr] md:overflow-hidden">

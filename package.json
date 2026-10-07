@@ -15,8 +15,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "health": "tsx packages/aiven/src/health.ts",
-    "seed": "tsx scripts/seed.ts",
-    "tokens": "pnpm --filter @pulse/ui build:css"
+    "seed": "tsx packages/db/src/seed.ts",
+    "tokens": "pnpm --filter @pulse/ui build:css",
+    "migrate": "tsx packages/db/src/migrate.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",

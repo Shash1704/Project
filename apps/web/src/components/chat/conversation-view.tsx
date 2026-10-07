@@ -6,6 +6,8 @@ import { AlertCircle, MoreHorizontal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
+  AiChip,
+  AiTray,
   AvatarStack,
   Bubble,
   Composer,
@@ -17,10 +19,12 @@ import {
 } from '@/components/ds';
 import { dayLabel, formatTime, lastSeen } from '@/lib/format';
 import { useMe } from '@/lib/session';
+import { CatchUpSheet } from './catch-up-sheet';
 import {
   closeConversation,
   loadOlder,
   openConversation,
+  patchMembership,
   retryMessage,
   sendMessage,
   signalTyping,
@@ -65,6 +69,19 @@ export function ConversationView({ id }: { id: string }) {
   const [tool, setTool] = useState<ComposerTool | null>(null);
   const [error, setError] = useState<string | null>(null);
   const stickToBottom = useRef(true);
+  const [catchUp, setCatchUp] = useState(false);
+  const [flash, setFlash] = useState<string | null>(null);
+  // Unread count at the moment the chat was opened (opening clears it).
+  const [unreadAtOpen] = useState(() => conv?.unread ?? 0);
+
+  const jumpTo = (messageId: string) => {
+    const el = scrollRef.current?.querySelector(`[data-mid="${messageId}"]`);
+    if (!el) return;
+    stickToBottom.current = false;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setFlash(messageId);
+    setTimeout(() => setFlash((f) => (f === messageId ? null : f)), 1600);
+  };
 
   useEffect(() => {
     openConversation(id).catch(() => setError('This chat could not be loaded.'));
@@ -143,6 +160,11 @@ export function ConversationView({ id }: { id: string }) {
 
       <div ref={scrollRef} onScroll={onScroll} className="flex-1 overflow-y-auto px-screen" aria-live="polite">
         <ConversationTitle title={conv.title} subtitle={<Subtitle c={conv} />} layoutId={`title-${conv.id}`} />
+        {conv.aiEnabled && conv.kind === 'group' && (messages?.length ?? 0) >= 10 && (
+          <div className="mb-4 flex justify-center">
+            <AiChip onClick={() => setCatchUp(true)}>{unreadAtOpen >= 5 ? `Catch me up · ${unreadAtOpen} new` : 'Catch me up'}</AiChip>
+          </div>
+        )}
         {error && (
           <p role="alert" className="mb-4 rounded-pill bg-coral px-4 py-2 text-body">
             {error}
@@ -171,7 +193,13 @@ export function ConversationView({ id }: { id: string }) {
                   {newDay && (
                     <p className="my-2 self-center rounded-pill bg-cream-deep px-3 py-1 text-caption text-muted">{dayLabel(m.createdAt)}</p>
                   )}
-                  <MessageRow m={m} mine={mine} author={showAuthor ? nameOf(m.senderId) : undefined} status={statusOf(m, state)} />
+                  <MessageRow
+                    m={m}
+                    mine={mine}
+                    author={showAuthor ? nameOf(m.senderId) : undefined}
+                    status={statusOf(m, state)}
+                    flash={flash === m.id}
+                  />
                 </Fragment>
               );
             })}
@@ -184,6 +212,21 @@ export function ConversationView({ id }: { id: string }) {
         )}
       </div>
 
+      <div className="shrink-0 px-screen">
+        <AiTray
+          open={tool === 'replies' || tool === 'tone'}
+          onClose={() => setTool(null)}
+          aiEnabled={conv.aiEnabled}
+          onToggleAi={() => void patchMembership(conv.id, { aiEnabled: !conv.aiEnabled })}
+        >
+          <p className="px-1 text-body text-white/80">
+            {conv.aiEnabled
+              ? 'AI is on for this chat: Catch me up reads only this conversation, and only for you.'
+              : 'AI is off for this chat. Tap the dot to opt in — nothing is sent to the AI until you do.'}
+          </p>
+        </AiTray>
+      </div>
+      <CatchUpSheet conversationId={conv.id} open={catchUp} onClose={() => setCatchUp(false)} onJump={jumpTo} />
       <Composer
         value={draft}
         onChange={setDraft}
@@ -201,23 +244,40 @@ function MessageRow({
   mine,
   author,
   status,
+  flash,
 }: {
   m: LocalMessage;
   mine: boolean;
   author?: string;
   status: ReturnType<typeof statusOf>;
+  flash?: boolean;
 }) {
   const failed = status === 'failed';
   return (
-    <div className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}>
+    <div data-mid={m.id} className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}>
       <Bubble
+        flash={flash}
         outgoing={mine}
         author={author}
         time={formatTime(m.createdAt)}
         status={failed ? undefined : status}
         edited={!!m.editedAt}
       >
-        {m.deletedAt ? <em className="opacity-70">This message was deleted</em> : m.body}
+        {m.deletedAt ? (
+          <em className="opacity-70">This message was deleted</em>
+        ) : m.kind === 'image' && m.media ? (
+          // eslint-disable-next-line @next/next/no-img-element -- remote user media, sized by its own metadata
+          <img
+            src={m.media.url}
+            alt="Shared photo"
+            width={m.media.width ?? 300}
+            height={m.media.height ?? 400}
+            className="max-h-80 w-auto rounded-[calc(var(--pulse-radius-bubble)-8px)] object-cover"
+            loading="lazy"
+          />
+        ) : (
+          m.body
+        )}
       </Bubble>
       {failed && (
         <button
