@@ -1,0 +1,30 @@
+# deps / build
+node_modules/
+.next/
+dist/
+out/
+.turbo/
+.vercel/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.crt
+certs/
+
+# os / editor
+.DS_Store
+*.log
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# local tooling
+.claude/

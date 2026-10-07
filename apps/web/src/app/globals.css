@@ -1,0 +1,65 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@pulse/ui/tokens.css';
+@import '@pulse/ui/theme.css';
+
+/* shadcn/ui semantic colours, mapped onto Pulse tokens (content screens are cream, ink type). */
+@theme inline {
+  --color-background: var(--pulse-cream);
+  --color-foreground: var(--pulse-ink);
+  --color-card: var(--pulse-cream-deep);
+  --color-card-foreground: var(--pulse-ink);
+  --color-popover: var(--pulse-ink);
+  --color-popover-foreground: var(--pulse-cream);
+  --color-primary: var(--pulse-ink);
+  --color-primary-foreground: var(--pulse-cream);
+  --color-secondary: var(--pulse-taupe-glass);
+  --color-secondary-foreground: var(--pulse-ink);
+  --color-accent: var(--pulse-highlight);
+  --color-accent-foreground: var(--pulse-ink);
+  --color-destructive: var(--pulse-coral);
+  --color-muted-foreground: var(--pulse-muted);
+  --color-border: var(--pulse-cream-deep);
+  --color-input: var(--pulse-cream-deep);
+  --color-ring: var(--pulse-ink);
+
+  /* No sharp corners anywhere: shadcn's radius scale collapses onto ours. */
+  --radius-sm: var(--pulse-radius-bubble);
+  --radius-md: var(--pulse-radius-bubble);
+  --radius-lg: var(--pulse-radius-bubble);
+  --radius-xl: var(--pulse-radius-card);
+  --radius-2xl: var(--pulse-radius-card);
+  --radius-3xl: var(--pulse-radius-sheet);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--pulse-ink);
+    color: var(--pulse-white);
+    font-family: var(--pulse-font-sans);
+    font-size: var(--pulse-text-body);
+    line-height: var(--pulse-text-body-lh);
+  }
+  ::selection {
+    background: var(--pulse-highlight);
+    color: var(--pulse-ink);
+  }
+  :focus-visible {
+    outline: 3px solid var(--pulse-highlight);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
