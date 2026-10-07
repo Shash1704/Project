@@ -9,12 +9,13 @@
   "scripts": {
     "dev": "pnpm --parallel --filter \"./apps/*\" dev",
     "build": "pnpm -r build",
-    "lint": "eslint .",
+    "lint": "node scripts/check-no-mocks.mjs && eslint .",
     "typecheck": "pnpm -r typecheck",
     "test": "vitest run",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "health": "tsx packages/aiven/src/health.ts",
+    "seed": "tsx scripts/seed.ts",
     "tokens": "pnpm --filter @pulse/ui build:css"
   },
   "devDependencies": {
