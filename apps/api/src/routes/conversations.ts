@@ -16,11 +16,10 @@ import {
   removeMember,
   setMemberFlags,
   setRole,
-  tickFor,
   updateGroup,
   watermarks,
 } from '@pulse/db';
-import { ulid } from '@pulse/shared';
+import { tickFor, ulid } from '@pulse/shared';
 import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';

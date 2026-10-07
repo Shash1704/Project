@@ -12,6 +12,7 @@
   "dependencies": {
     "@dicebear/core": "^9.4.3",
     "@dicebear/notionists": "^9.4.2",
+    "@pulse/shared": "workspace:*",
     "@pulse/ui": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -21,7 +22,8 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "socket.io-client": "^4.8.4",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "ulid": "^3.0.2"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4.3.3",

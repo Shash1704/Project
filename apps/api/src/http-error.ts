@@ -23,12 +23,10 @@ export const h =
 
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof ZodError) {
-    res
-      .status(400)
-      .json({
-        error: 'Invalid request',
-        issues: err.issues.map((i) => ({ path: i.path, message: i.message })),
-      });
+    res.status(400).json({
+      error: 'Invalid request',
+      issues: err.issues.map((i) => ({ path: i.path, message: i.message })),
+    });
     return;
   }
   if (err instanceof HttpError) {

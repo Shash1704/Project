@@ -11,13 +11,11 @@ export const startReceipts = () =>
     schema: receiptEvent,
     handle: async (e) => {
       await advanceWatermark(e.conversationId, e.userId, e.upToId, e.status);
-      sockets()
-        .to(`conv:${e.conversationId}`)
-        .emit('receipt', {
-          conversationId: e.conversationId,
-          userId: e.userId,
-          upToId: e.upToId,
-          status: e.status,
-        });
+      sockets().to(`conv:${e.conversationId}`).emit('receipt', {
+        conversationId: e.conversationId,
+        userId: e.userId,
+        upToId: e.upToId,
+        status: e.status,
+      });
     },
   });

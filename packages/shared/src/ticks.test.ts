@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { tickFor } from './messages';
+import { tickFor } from './ticks';
 
 const A = '01J00000000000000000000000';
 const B = '01J00000000000000000000005';
