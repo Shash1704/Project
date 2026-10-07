@@ -12,11 +12,14 @@
   "dependencies": {
     "@opensearch-project/opensearch": "^3.9.0",
     "@pulse/aiven": "workspace:*",
+    "@pulse/db": "workspace:*",
     "@pulse/shared": "workspace:*",
+    "@socket.io/redis-emitter": "^5.1.0",
     "ioredis": "^6.0.0",
     "kafkajs": "^2.2.4",
     "mysql2": "^3.24.5",
     "pg": "^8.23.1",
+    "ulid": "^3.0.2",
     "zod": "^4.6.5"
   },
   "devDependencies": {

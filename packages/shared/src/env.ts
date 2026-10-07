@@ -49,12 +49,20 @@ export const appEnv = z.object({
   WEB_ORIGIN: z.url().default('http://localhost:3100'),
 });
 
+export const authEnv = z.object({
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+  /** Resend (https://resend.com) for OTP email. Unset → email login is disabled; demo login still works. */
+  RESEND_API_KEY: nonEmpty.optional(),
+  EMAIL_FROM: nonEmpty.default('Pulse <onboarding@resend.dev>'),
+});
+
 export type MysqlEnv = z.infer<typeof mysqlEnv>;
 export type PgEnv = z.infer<typeof pgEnv>;
 export type KafkaEnv = z.infer<typeof kafkaEnv>;
 export type ValkeyEnv = z.infer<typeof valkeyEnv>;
 export type OpensearchEnv = z.infer<typeof opensearchEnv>;
 export type AppEnv = z.infer<typeof appEnv>;
+export type AuthEnv = z.infer<typeof authEnv>;
 
 /**
  * Parse env with a schema and throw an error that names missing/invalid variables
