@@ -20,14 +20,18 @@ function ask(question: string, hidden: boolean): Promise<string> {
           stdin.off('data', onData);
           if (raw) stdin.setRawMode(false);
           stdin.pause();
-          stdout.write(hidden && value ? ' ✓ (hidden)\n' : '\n');
-          return resolve(value.trim());
+          stdout.write('\n');
+          return resolve(value.replace(/\[20[01]~/g, '').trim());
         }
         if (ch === '\u0003') process.exit(1);
-        if (ch === '\u007f') value = value.slice(0, -1);
-        else {
+        if (ch === '\u007f') {
+          if (value) {
+            value = value.slice(0, -1);
+            stdout.write('\b \b');
+          }
+        } else if (ch >= ' ') {
           value += ch;
-          if (!hidden) stdout.write(ch);
+          stdout.write(hidden ? '•' : ch);
         }
       }
     };
