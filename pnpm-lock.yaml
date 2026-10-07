@@ -169,6 +169,12 @@ importers:
       '@eslint/js':
         specifier: ^9.39.0
         version: 9.39.5
+      '@pulse/aiven':
+        specifier: workspace:*
+        version: link:packages/aiven
+      '@pulse/shared':
+        specifier: workspace:*
+        version: link:packages/shared
       '@types/node':
         specifier: ^24.0.0
         version: 24.19.1

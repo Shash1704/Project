@@ -9,7 +9,7 @@ const caFields = <P extends string>(prefix: P) =>
   ({
     [`${prefix}_CA_CERT_PATH`]: z.preprocess(blankToUndefined, nonEmpty.optional()),
     [`${prefix}_CA_CERT_BASE64`]: z.preprocess(blankToUndefined, nonEmpty.optional()),
-  }) as Record<`${P}_CA_CERT_PATH` | `${P}_CA_CERT_BASE64`, z.ZodType<string | undefined>>;
+  }) as unknown as Record<`${P}_CA_CERT_PATH` | `${P}_CA_CERT_BASE64`, z.ZodOptional<z.ZodString>>;
 
 export const mysqlEnv = z.object({
   MYSQL_URL: z.url({ protocol: /^mysql$/ }),
