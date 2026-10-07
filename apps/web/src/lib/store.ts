@@ -304,7 +304,7 @@ export async function loadOlder(id: string): Promise<void> {
 
 function emitSend(input: SendMessageInput) {
   void getSocket()
-    .timeout(10_000)
+    .timeout(20_000)
     .emitWithAck('message:send', input)
     .then((res) => res.ok)
     .catch(() => false)

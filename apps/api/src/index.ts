@@ -7,9 +7,10 @@ loadRootEnv();
 const { env } = await import('./env');
 const { createApp } = await import('./app');
 const { createSocketServer } = await import('./socket');
-const { disconnectProducer } = await import('./kafka');
+const { disconnectProducer, warmProducer } = await import('./kafka');
 const { closeDb, closeValkey } = await import('@pulse/db');
 
+warmProducer();
 const http = createServer(createApp());
 // Hosts like Render inject PORT; fall back to API_PORT locally.
 const port = Number(process.env.PORT) || env.API_PORT;

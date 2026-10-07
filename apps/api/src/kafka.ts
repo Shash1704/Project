@@ -61,6 +61,11 @@ export async function publishAnalytics(
   }
 }
 
+/** Connect at boot so the first message doesn't pay the (cross-region) connection cost. */
+export function warmProducer(): void {
+  getProducer().catch((e) => console.error(`[api] kafka warm-up failed: ${e instanceof Error ? e.message : e}`));
+}
+
 export async function disconnectProducer(): Promise<void> {
   await producer?.disconnect().catch(() => {});
   producer = undefined;

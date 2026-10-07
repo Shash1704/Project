@@ -69,13 +69,14 @@ export function createSocketServer(http: HttpServer): IO {
 
 async function onConnect(io: IO, socket: S) {
   const userId = socket.data.userId;
-  const convIds = await cachedConversationIds(userId);
-  await socket.join([`user:${userId}`, ...convIds.map((c) => `conv:${c}`)]);
-  await markOnline(userId);
-  const beat = setInterval(
-    () => void valkey().expire(keys.presence(userId), PRESENCE_TTL_SEC),
-    HEARTBEAT_MS,
-  );
+  // Handlers are attached synchronously below; room joins and presence happen in the background so an
+  // event emitted right after connect is never dropped.
+  void (async () => {
+    const convIds = await cachedConversationIds(userId);
+    await socket.join([`user:${userId}`, ...convIds.map((c) => `conv:${c}`)]);
+    await markOnline(userId);
+  })().catch((e) => console.error(`[socket] join/presence: ${errorMessage(e)}`));
+  const beat = setInterval(() => void valkey().expire(keys.presence(userId), PRESENCE_TTL_SEC), HEARTBEAT_MS);
 
   const guard =
     <T>(fn: (input: T) => Promise<void>) =>
