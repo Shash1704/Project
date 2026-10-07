@@ -40,3 +40,10 @@ describe('parseEnv', () => {
     });
   });
 });
+
+describe('blank values', () => {
+  it('treats an empty CA line as unset, and an empty required var as not set', () => {
+    expect(() => parseEnv(mysqlEnv, { MYSQL_URL: 'mysql://u:p@h:1/db', MYSQL_CA_CERT_BASE64: '' })).not.toThrow();
+    expect(() => parseEnv(valkeyEnv, { VALKEY_URL: '' })).toThrow('VALKEY_URL is not set');
+  });
+});

@@ -1,13 +1,15 @@
 import { z } from 'zod';
 
 const nonEmpty = z.string().trim().min(1);
+/** Blank lines in .env (`KEY=`) mean "not set", not "invalid". */
+const blankToUndefined = (v: unknown) => (typeof v === 'string' && v.trim() === '' ? undefined : v);
 
 /** A CA certificate may come from a file path or a base64 string (for hosts without secret files). */
 const caFields = <P extends string>(prefix: P) =>
   ({
-    [`${prefix}_CA_CERT_PATH`]: nonEmpty.optional(),
-    [`${prefix}_CA_CERT_BASE64`]: nonEmpty.optional(),
-  }) as Record<`${P}_CA_CERT_PATH` | `${P}_CA_CERT_BASE64`, z.ZodOptional<typeof nonEmpty>>;
+    [`${prefix}_CA_CERT_PATH`]: z.preprocess(blankToUndefined, nonEmpty.optional()),
+    [`${prefix}_CA_CERT_BASE64`]: z.preprocess(blankToUndefined, nonEmpty.optional()),
+  }) as Record<`${P}_CA_CERT_PATH` | `${P}_CA_CERT_BASE64`, z.ZodType<string | undefined>>;
 
 export const mysqlEnv = z.object({
   MYSQL_URL: z.url({ protocol: /^mysql$/ }),
@@ -76,7 +78,7 @@ export function parseEnv<S extends z.ZodType>(
   if (result.success) return result.data;
   const problems = result.error.issues.map((i) => {
     const key = i.path.join('.') || '(root)';
-    const missing = i.code === 'invalid_type' && source[key] === undefined;
+    const missing = !source[key]?.trim();
     return missing ? `${key} is not set` : `${key} is invalid`;
   });
   throw new Error(problems.join('; '));
