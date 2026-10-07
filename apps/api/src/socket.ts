@@ -12,7 +12,7 @@ import {
 import { createAdapter } from '@socket.io/redis-adapter';
 import { Server, type Socket } from 'socket.io';
 import { sessionAlive, verifyAccess } from './auth/tokens';
-import { env } from './env';
+import { env, isProd } from './env';
 import { publishAnalytics, publishMessage, publishPresence, publishReceipt } from './kafka';
 import { setIo } from './socket-ref';
 
@@ -34,7 +34,14 @@ const HEARTBEAT_MS = 30_000;
 
 export function createSocketServer(http: HttpServer): IO {
   const io: IO = new Server(http, {
-    cors: { origin: env.WEB_ORIGIN, credentials: true },
+    // Production: only the web app's origin. Dev: also private-network origins, so phones/laptops on the
+    // same Wi-Fi can open http://<this-mac-ip>:3100.
+    cors: {
+      origin: isProd
+        ? env.WEB_ORIGIN
+        : [env.WEB_ORIGIN, /^http:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|192\.168\.\d+\.\d+)(:\d+)?$/],
+      credentials: true,
+    },
     connectionStateRecovery: { maxDisconnectionDuration: 2 * 60 * 1000 },
     pingInterval: 20_000,
   });

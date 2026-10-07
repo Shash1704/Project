@@ -11,7 +11,8 @@ let socket: PulseSocket | null = null;
 /** One socket per tab. `auth` is a callback so every (re)connect presents a fresh access token. */
 export function getSocket(): PulseSocket {
   if (socket) return socket;
-  const url = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4100';
+  // Default to the API on the same host the page was opened from (works for LAN devices in dev).
+  const url = process.env.NEXT_PUBLIC_API_URL ?? `${location.protocol}//${location.hostname}:4100`;
   socket = io(url, {
     transports: ['websocket'],
     withCredentials: true,
