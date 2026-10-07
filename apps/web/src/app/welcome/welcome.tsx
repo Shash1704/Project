@@ -42,6 +42,7 @@ export function Welcome() {
   const [slide, setSlide] = useState(0);
   const [lang, setLang] = useState<Lang>('en');
   const [demo, setDemo] = useState<DemoAccount[] | null>(null);
+  const [offline, setOffline] = useState(false);
   const [emailLogin, setEmailLogin] = useState(false);
   const [step, setStep] = useState<'pick' | 'email' | 'code'>('pick');
   const [email, setEmail] = useState('');
@@ -179,7 +180,13 @@ export function Welcome() {
                 ))}
               {demo?.length === 0 && (
                 <p className="rounded-card bg-ink-raised p-4 text-body text-white/70">
-                  Demo accounts aren’t seeded yet. Run <code>pnpm seed</code>.
+                  {offline ? (
+                    'Can’t reach the Pulse server right now. Try again in a moment.'
+                  ) : (
+                    <>
+                      Demo accounts aren’t seeded yet. Run <code>pnpm seed</code>.
+                    </>
+                  )}
                 </p>
               )}
               {demo?.map((d) => (
