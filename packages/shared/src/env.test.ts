@@ -47,3 +47,10 @@ describe('blank values', () => {
     expect(() => parseEnv(valkeyEnv, { VALKEY_URL: '' })).toThrow('VALKEY_URL is not set');
   });
 });
+
+describe('blank optional values', () => {
+  it('ignores blank optional vars instead of failing', async () => {
+    const { authEnv } = await import('./env');
+    expect(() => parseEnv(authEnv, { JWT_SECRET: 'x'.repeat(40), RESEND_API_KEY: '' })).not.toThrow();
+  });
+});

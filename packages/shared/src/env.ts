@@ -74,7 +74,9 @@ export function parseEnv<S extends z.ZodType>(
   schema: S,
   source: NodeJS.ProcessEnv = process.env,
 ): z.infer<S> {
-  const result = schema.safeParse(source);
+  // Blank lines in .env (`KEY=`) mean "not set" everywhere.
+  const cleaned = Object.fromEntries(Object.entries(source).filter(([, v]) => v !== undefined && v.trim() !== ''));
+  const result = schema.safeParse(cleaned);
   if (result.success) return result.data;
   const problems = result.error.issues.map((i) => {
     const key = i.path.join('.') || '(root)';
