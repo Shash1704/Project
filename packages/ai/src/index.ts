@@ -117,3 +117,46 @@ export async function catchMeUp(
     actionItems: out.actionItems.filter((d) => valid.has(d.ref)).slice(0, 3),
   };
 }
+
+// ── Smart Replies, Tone Check, Live Translate ─────────────────────────────
+
+export async function smartReplies(
+  lines: ChatLine[],
+  opts: { me: string; lang: string },
+): Promise<string[]> {
+  const ai = llm();
+  if (!ai) throw new AiUnavailableError('AI is not configured on this server');
+  const out = await ai.structured({
+    system: `Suggest 3 short, natural replies (max 8 words each) that ${opts.me} could send next. Match the chat's language mix and tone. Reply language: ${opts.lang}.`,
+    prompt: lines.map((l) => `${l.author}: ${l.text}`).join('\n'),
+    schema: z.object({ replies: z.array(z.string()) }),
+    maxTokens: 1000,
+  });
+  return out.replies.slice(0, 3);
+}
+
+export async function toneCheck(
+  draft: string,
+): Promise<{ harsh: boolean; reason: string; suggestion: string }> {
+  const ai = llm();
+  if (!ai) throw new AiUnavailableError('AI is not configured on this server');
+  return ai.structured({
+    system:
+      'You check whether a chat message would read as harsh, rude or hurtful to the recipient. If it would, give a one-line reason and a kinder rewrite with the same meaning, in the same language. If not, harsh=false and empty strings.',
+    prompt: draft,
+    schema: z.object({ harsh: z.boolean(), reason: z.string(), suggestion: z.string() }),
+    maxTokens: 800,
+  });
+}
+
+export async function translate(text: string, toLang: string): Promise<string> {
+  const ai = llm();
+  if (!ai) throw new AiUnavailableError('AI is not configured on this server');
+  const out = await ai.structured({
+    system: `Translate the chat message into ${toLang}. Keep emoji, names and tone. Output only the translation.`,
+    prompt: text,
+    schema: z.object({ translation: z.string() }),
+    maxTokens: 1500,
+  });
+  return out.translation;
+}

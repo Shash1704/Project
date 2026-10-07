@@ -62,7 +62,10 @@ export function Welcome() {
     void refresh().then((r) => r && router.replace('/'));
     api<DemoAccount[]>('/auth/demo-accounts')
       .then(setDemo)
-      .catch(() => setDemo([]));
+      .catch(() => {
+        setOffline(true);
+        setDemo([]);
+      });
     api<{ emailLogin: boolean }>('/auth/config')
       .then((c) => setEmailLogin(c.emailLogin))
       .catch(() => {});

@@ -14,9 +14,12 @@ import {
   ConversationTitle,
   ConversationTopBar,
   IconButton,
+  MessageMenu,
+  SuggestionPill,
   TypingIndicator,
   type ComposerTool,
 } from '@/components/ds';
+import { api, ApiError } from '@/lib/api';
 import { dayLabel, formatTime, lastSeen } from '@/lib/format';
 import { useMe } from '@/lib/session';
 import { CatchUpSheet } from './catch-up-sheet';
@@ -75,6 +78,61 @@ export function ConversationView({ id }: { id: string }) {
   const [flash, setFlash] = useState<string | null>(null);
   // Unread count at the moment the chat was opened (opening clears it).
   const [unreadAtOpen] = useState(() => conv?.unread ?? 0);
+
+  const [replies, setReplies] = useState<string[] | null>(null);
+  const [tone, setTone] = useState<{ harsh: boolean; reason: string; suggestion: string } | null>(
+    null,
+  );
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [menuFor, setMenuFor] = useState<LocalMessage | null>(null);
+  const [translations, setTranslations] = useState<Record<string, string>>({});
+
+  const runTool = (t: ComposerTool) => {
+    const next = tool === t ? null : t;
+    setTool(next);
+    setAiError(null);
+    if (!conv?.aiEnabled || !next) return;
+    const fail = (e: unknown) =>
+      setAiError(e instanceof ApiError ? e.message : 'AI is unavailable right now');
+    if (next === 'replies') {
+      setReplies(null);
+      api<{ replies: string[] }>(`/ai/conversations/${id}/replies`, { method: 'POST' })
+        .then((r) => setReplies(r.replies))
+        .catch(fail);
+    }
+    if (next === 'tone') {
+      setTone(null);
+      if (!draft.trim()) return setAiError('Type a message first, then check its tone.');
+      api<{ harsh: boolean; reason: string; suggestion: string }>(`/ai/conversations/${id}/tone`, {
+        method: 'POST',
+        json: { text: draft },
+      })
+        .then(setTone)
+        .catch(fail);
+    }
+  };
+
+  const onMenuAction = (a: string) => {
+    const m = menuFor;
+    setMenuFor(null);
+    if (!m?.body) return;
+    if (a === 'copy') void navigator.clipboard?.writeText(m.body).catch(() => {});
+    if (a === 'translate') {
+      if (!conv?.aiEnabled) {
+        setTool('replies');
+        setAiError('Turn on AI for this chat to translate messages.');
+        return;
+      }
+      api<{ text: string }>(`/ai/messages/${m.id}/translate`, {
+        method: 'POST',
+        json: { lang: me?.lang ?? 'en' },
+      })
+        .then((r) => setTranslations((t) => ({ ...t, [m.id]: r.text })))
+        .catch(() =>
+          setTranslations((t) => ({ ...t, [m.id]: 'Translation unavailable right now' })),
+        );
+    }
+  };
 
   const jumpTo = (messageId: string) => {
     const el = scrollRef.current?.querySelector(`[data-mid="${messageId}"]`);
@@ -234,6 +292,8 @@ export function ConversationView({ id }: { id: string }) {
                     author={showAuthor ? nameOf(m.senderId) : undefined}
                     status={statusOf(m, state)}
                     flash={flash === m.id}
+                    translation={translations[m.id]}
+                    onMenu={() => setMenuFor(m)}
                   />
                 </Fragment>
               );
@@ -259,11 +319,48 @@ export function ConversationView({ id }: { id: string }) {
           aiEnabled={conv.aiEnabled}
           onToggleAi={() => void patchMembership(conv.id, { aiEnabled: !conv.aiEnabled })}
         >
-          <p className="px-1 text-body text-white/80">
-            {conv.aiEnabled
-              ? 'AI is on for this chat: Catch me up reads only this conversation, and only for you.'
-              : 'AI is off for this chat. Tap the dot to opt in — nothing is sent to the AI until you do.'}
-          </p>
+          {!conv.aiEnabled ? (
+            <p className="px-1 text-body text-white/80">
+              AI is off for this chat. Tap the dot to opt in — nothing is sent to the AI until you
+              do.
+            </p>
+          ) : aiError ? (
+            <p className="px-1 text-body text-white/80">{aiError}</p>
+          ) : tool === 'replies' ? (
+            <div className="-mx-3 flex gap-2 overflow-x-auto px-3 [scrollbar-width:none]">
+              {replies
+                ? replies.map((r) => (
+                    <SuggestionPill key={r} onClick={() => (setDraft(r), setTool(null))}>
+                      {r}
+                    </SuggestionPill>
+                  ))
+                : [0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      className="h-11 w-32 shrink-0 animate-pulse rounded-pill bg-white/15"
+                    />
+                  ))}
+            </div>
+          ) : tone ? (
+            tone.harsh ? (
+              <div className="rounded-card bg-ink-raised p-4 text-body">
+                <p>
+                  <span
+                    aria-hidden
+                    className="mr-2 inline-block size-2.5 rounded-pill bg-highlight"
+                  />
+                  {tone.reason}
+                </p>
+                <SuggestionPill onClick={() => (setDraft(tone.suggestion), setTool(null))}>
+                  Use: “{tone.suggestion}”
+                </SuggestionPill>
+              </div>
+            ) : (
+              <p className="px-1 text-body text-white/80">Sounds friendly 👍 Good to send.</p>
+            )
+          ) : (
+            <div className="h-11 animate-pulse rounded-pill bg-white/15" />
+          )}
         </AiTray>
       </div>
       <CatchUpSheet
@@ -278,8 +375,19 @@ export function ConversationView({ id }: { id: string }) {
         onTyping={() => signalTyping(id)}
         onSend={send}
         activeTool={tool}
-        onTool={(t) => setTool((cur) => (cur === t ? null : t))}
+        onTool={runTool}
       />
+      <MessageMenu open={!!menuFor} onClose={() => setMenuFor(null)} onAction={onMenuAction}>
+        {menuFor && (
+          <Bubble
+            outgoing={menuFor.senderId === me?.id}
+            time={formatTime(menuFor.createdAt)}
+            marked
+          >
+            {menuFor.body ?? 'Photo'}
+          </Bubble>
+        )}
+      </MessageMenu>
     </div>
   );
 }
@@ -290,17 +398,40 @@ function MessageRow({
   author,
   status,
   flash,
+  translation,
+  onMenu,
 }: {
   m: LocalMessage;
   mine: boolean;
   author?: string;
   status: ReturnType<typeof statusOf>;
   flash?: boolean;
+  translation?: string;
+  onMenu: () => void;
 }) {
   const failed = status === 'failed';
+  const press = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   return (
-    <div data-mid={m.id} className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}>
+    <div
+      data-mid={m.id}
+      className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}
+      onPointerDown={() => (press.current = setTimeout(onMenu, 450))}
+      onPointerUp={() => clearTimeout(press.current)}
+      onPointerLeave={() => clearTimeout(press.current)}
+    >
       <Bubble
+        onContextMenu={(e) => {
+          e.preventDefault();
+          onMenu();
+        }}
+        footer={
+          translation ? (
+            <span className="mt-1.5 block border-t border-current/20 pt-1.5 text-body">
+              <span aria-hidden className="mr-1.5 inline-block size-2 rounded-pill bg-highlight" />
+              {translation}
+            </span>
+          ) : undefined
+        }
         flash={flash}
         outgoing={mine}
         author={author}

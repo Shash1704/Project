@@ -68,8 +68,8 @@ Copy `apps/web/.env.example` to `apps/web/.env.local`.
 
 Built and tested (lint, typecheck, 52 unit tests, production builds), but **not yet run against live Aiven services**:
 
-- Auth (judge demo login, email OTP, rotating refresh sessions), 1:1 and group chat, real-time delivery through Kafka, ticks, typing, presence, unread counts, pinned chats, photo messages, Catch Me Up, Under the Hood, and the seed data.
+- Auth (judge demo login, email OTP, rotating refresh sessions), 1:1 and group chat, real-time delivery through Kafka, ticks, typing, presence, unread counts, pinned chats, photo messages, Catch Me Up, Smart Replies, Tone Check, Live Translate (cached as `tr:{msg}:{lang}`), long-press message menu, Under the Hood, and the seed data.
 
 Not built yet:
 
-- Media upload (Cloudinary), OpenSearch keyword search, Ask Your Chats (pgvector embeddings), Live Translate, Smart Replies, Tone Check, Moments, Chat Pulse, reactions, reply/edit/delete, Web Push, and the card-to-chat shared-element transition.
+- Media upload (Cloudinary), OpenSearch keyword search, Ask Your Chats (pgvector embeddings), Moments, Chat Pulse, reactions, reply/edit/delete, Web Push, and the card-to-chat shared-element transition.

@@ -1,6 +1,14 @@
-import { AiUnavailableError, catchMeUp, type ChatLine } from '@pulse/ai';
+import {
+  AiUnavailableError,
+  catchMeUp,
+  smartReplies,
+  toneCheck,
+  translate,
+  type ChatLine,
+} from '@pulse/ai';
 import {
   getConversation,
+  getMessage,
   getUser,
   getUsers,
   listMessages,
@@ -10,6 +18,7 @@ import {
 } from '@pulse/db';
 import { ulid } from '@pulse/shared';
 import { Router } from 'express';
+import { z } from 'zod';
 import { requireAuth } from '../auth/middleware';
 import { HttpError, forbidden, h, notFound } from '../http-error';
 import { publishAnalytics } from '../kafka';
@@ -108,5 +117,94 @@ aiRouter.post(
       meta: { feature: 'catch_up' },
     });
     res.json(dto);
+  }),
+);
+
+async function aiMember(conversationId: string, userId: string) {
+  const m = await membership(conversationId, userId);
+  if (!m) throw notFound('Conversation not found');
+  if (!m.aiEnabled) throw forbidden('Turn on AI for this chat first');
+  if (!(await rateLimit('ai', userId, 60, 600)))
+    throw new HttpError(429, 'AI is cooling down, try again in a minute');
+}
+
+const wrap = async <T>(fn: () => Promise<T>): Promise<T> => {
+  try {
+    return await fn();
+  } catch (e) {
+    if (e instanceof AiUnavailableError) throw new HttpError(503, e.message);
+    throw e;
+  }
+};
+
+aiRouter.post(
+  '/conversations/:id/replies',
+  h(async (req, res) => {
+    const id = ulid.parse(req.params.id);
+    await aiMember(id, req.userId);
+    const [conv, me, messages] = await Promise.all([
+      getConversation(id, req.userId),
+      getUser(req.userId),
+      listMessages(id, { limit: 20 }),
+    ]);
+    const names = new Map(conv?.members.map((m) => [m.userId, m.name]) ?? []);
+    const lines: ChatLine[] = messages
+      .filter((m) => m.body && !m.deletedAt)
+      .map((m, i) => ({
+        ref: i,
+        author: m.senderId === req.userId ? 'Me' : (names.get(m.senderId) ?? 'Someone'),
+        text: m.body!,
+        at: '',
+      }));
+    if (!lines.length) throw new HttpError(400, 'Nothing to reply to yet');
+    const replies = await wrap(() =>
+      smartReplies(lines, { me: 'Me', lang: LANG_NAME[me?.lang ?? 'en'] ?? 'English' }),
+    );
+    void publishAnalytics({
+      type: 'ai_used',
+      userId: req.userId,
+      conversationId: id,
+      meta: { feature: 'smart_replies' },
+    });
+    res.json({ replies });
+  }),
+);
+
+aiRouter.post(
+  '/conversations/:id/tone',
+  h(async (req, res) => {
+    const id = ulid.parse(req.params.id);
+    const { text } = z.object({ text: z.string().trim().min(1).max(4000) }).parse(req.body);
+    await aiMember(id, req.userId);
+    res.json(await wrap(() => toneCheck(text)));
+  }),
+);
+
+/** Live Translate, cached per message and language as tr:{msg}:{lang}. */
+aiRouter.post(
+  '/messages/:id/translate',
+  h(async (req, res) => {
+    const id = ulid.parse(req.params.id);
+    const { lang } = z.object({ lang: z.enum(['en', 'hi', 'kn', 'ta']) }).parse(req.body);
+    const msg = await getMessage(id);
+    if (!msg?.body || msg.deletedAt) throw notFound('Message not found');
+    await aiMember(msg.conversationId, req.userId);
+    const key = `tr:${id}:${lang}`;
+    const cached = await valkey().get(key);
+    if (cached) {
+      void valkey().incr('stats:cache:hit');
+      res.json({ text: cached, cached: true });
+      return;
+    }
+    void valkey().incr('stats:cache:miss');
+    const text = await wrap(() => translate(msg.body!, LANG_NAME[lang]!));
+    await valkey().set(key, text, 'EX', 30 * 24 * 3600);
+    void publishAnalytics({
+      type: 'ai_used',
+      userId: req.userId,
+      conversationId: msg.conversationId,
+      meta: { feature: 'translate' },
+    });
+    res.json({ text, cached: false });
   }),
 );
